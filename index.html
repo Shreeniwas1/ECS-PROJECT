@@ -18,9 +18,45 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Add loading overlay styles */
+        #auth-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner-container {
+            margin-bottom: 20px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #auth-loading-overlay {
+                background-color: rgba(26, 26, 26, 0.9);
+            }
+        }
+    </style>
 </head>
 
 <body>
+    <!-- Auth loading overlay -->
+    <div id="auth-loading-overlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <h4>Checking authentication...</h4>
+    </div>
+
     <div class="container-fluid p-0">
         <div class="row g-0">
             <!-- Sidebar -->
@@ -43,7 +79,7 @@
                             <span>Inventory</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="shipments.html">
                             <i class="fas fa-truck-loading"></i>
                             <span>Shipments</span>
@@ -54,7 +90,7 @@
                             <i class="fas fa-clipboard-list"></i>
                             <span>Orders</span>
                         </a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link" href="#">
                             <i class="fas fa-thermometer-half"></i>
@@ -432,6 +468,7 @@
             const sidebarToggle = document.getElementById('sidebar-toggle');
             const sidebar = document.querySelector('.sidebar');
             const mainContent = document.querySelector('.main-content');
+            const authLoadingOverlay = document.getElementById('auth-loading-overlay');
 
             // Check for stored preference
             const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
@@ -507,14 +544,18 @@
                     if (sidebarLogoutBtn) {
                         sidebarLogoutBtn.setAttribute('data-auth', 'true');
                     }
+
+                    // Hide loading overlay
+                    authLoadingOverlay.style.display = 'none';
                 } else {
-                    // User is not signed in - redirect to login page
+                    // User is not signed in - ALWAYS redirect to login page
+                    console.log('No authenticated session found, redirecting to login...');
+                    window.location.href = 'login.html';
+
+                    // The code below won't execute due to redirect, but keeping it in case
+                    // the redirect fails for some reason
                     signInButton.classList.remove('d-none');
                     userDropdown.classList.add('d-none');
-
-                    // Optional: Redirect to login page
-                    // Uncomment this if you want to force login
-                    // window.location.href = 'login.html';
 
                     // Update logout button in sidebar
                     if (sidebarLogoutBtn) {

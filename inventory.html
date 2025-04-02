@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
     <!-- Inventory specific styles -->
@@ -64,12 +66,30 @@
             text-align: center;
             background-color: #f8f9fa;
         }
-
-        /* Remove conflicting sidebar styles */
     </style>
 </head>
 
 <body>
+    <!-- Auth loading overlay -->
+    <div id="auth-loading-overlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <h4>Checking authentication...</h4>
+    </div>
+
+    <!-- Inventory data loading overlay -->
+    <div id="data-loading-overlay" style="display: none;">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <h4>Loading inventory data...</h4>
+    </div>
+
     <div class="container-fluid p-0">
         <div class="row g-0">
             <!-- Sidebar -->
@@ -153,21 +173,45 @@
     <div class="col main-content">
         <header class="d-flex justify-content-between align-items-center mb-4">
             <h2>Inventory Management</h2>
-            <div class="header-actions">
+            <div class="header-actions d-flex align-items-center">
                 <div class="dropdown d-inline-block me-2">
                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="warehouseSelector"
                         data-bs-toggle="dropdown">
                         <i class="fas fa-warehouse me-1"></i> Warehouse #1
                     </button>
-                    <ul class="dropdown-menu" aria-labelledby="warehouseSelector">
-                        <li><a class="dropdown-item active" href="#">Warehouse #1</a></li>
-                        <li><a class="dropdown-item" href="#">Warehouse #2</a></li>
-                        <li><a class="dropdown-item" href="#">Warehouse #3</a></li>
+                    <ul class="dropdown-menu" aria-labelledby="warehouseSelector" id="warehouse-dropdown">
+                        <!-- Warehouses will be populated dynamically -->
                     </ul>
                 </div>
                 <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
                     <i class="fas fa-plus me-1"></i> Add Item
                 </button>
+
+                <!-- User Account Container -->
+                <div class="user-account-container ms-2">
+                    <!-- Sign In Button (shown when not authenticated) -->
+                    <a href="login.html" id="sign-in-button" class="btn btn-outline-primary d-none">
+                        <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                    </a>
+
+                    <!-- Account Circle (shown when authenticated) -->
+                    <div class="dropdown d-none" id="user-dropdown">
+                        <button class="btn btn-outline-secondary rounded-circle p-2" type="button" id="userMenuButton"
+                            data-bs-toggle="dropdown" aria-expanded="false" title="User Account">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li class="dropdown-item-text" id="user-email">user@example.com</li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="profile.html"><i
+                                        class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="sign-out-button"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -179,10 +223,10 @@
                         <i class="fas fa-cubes"></i>
                         Total Items
                     </h5>
-                    <div class="fs-2 fw-bold">1,284</div>
-                    <div class="text-muted small">
+                    <div class="fs-2 fw-bold" id="total-items-count">0</div>
+                    <div class="text-muted small" id="total-items-trend">
                         <i class="fas fa-arrow-up text-success me-1"></i>
-                        <span>5.3% from last month</span>
+                        <span>Loading...</span>
                     </div>
                 </div>
             </div>
@@ -192,10 +236,10 @@
                         <i class="fas fa-exclamation-triangle"></i>
                         Low Stock
                     </h5>
-                    <div class="fs-2 fw-bold text-danger">24</div>
-                    <div class="text-muted small">
+                    <div class="fs-2 fw-bold text-danger" id="low-stock-count">0</div>
+                    <div class="text-muted small" id="low-stock-trend">
                         <i class="fas fa-arrow-down text-success me-1"></i>
-                        <span>2.1% from last week</span>
+                        <span>Loading...</span>
                     </div>
                 </div>
             </div>
@@ -205,10 +249,10 @@
                         <i class="fas fa-dolly-flatbed"></i>
                         Total Value
                     </h5>
-                    <div class="fs-2 fw-bold">$247,580</div>
-                    <div class="text-muted small">
+                    <div class="fs-2 fw-bold" id="total-value">$0</div>
+                    <div class="text-muted small" id="total-value-trend">
                         <i class="fas fa-arrow-up text-success me-1"></i>
-                        <span>8.7% from last month</span>
+                        <span>Loading...</span>
                     </div>
                 </div>
             </div>
@@ -216,11 +260,11 @@
                 <div class="dashboard-card">
                     <h5 class="card-title">
                         <i class="fas fa-exchange-alt"></i>
-                        Turnover Rate
+                        Categories
                     </h5>
-                    <div class="fs-2 fw-bold">4.2x</div>
+                    <div class="fs-2 fw-bold" id="category-count">0</div>
                     <div class="text-muted small">
-                        <span>Monthly average</span>
+                        <span>Available categories</span>
                     </div>
                 </div>
             </div>
@@ -250,11 +294,7 @@
                     <label for="category-filter" class="form-label">Category</label>
                     <select class="form-select" id="category-filter">
                         <option value="">All Categories</option>
-                        <option value="Electronics">Electronics</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Food">Food</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="Office">Office Supplies</option>
+                        <!-- Categories will be populated dynamically -->
                     </select>
                 </div>
                 <div class="col-md-3 mb-2">
@@ -325,162 +365,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>INV-1001</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
-                                        alt="Product">
-                                    <div>
-                                        <div class="fw-bold">Wireless Keyboard</div>
-                                        <div class="text-muted small">SKU: KB-2022-BLK</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-info category-badge">Electronics</span></td>
-                            <td>
-                                <span class="stock-level stock-high"></span> 85
-                            </td>
-                            <td>Section A, Shelf 3</td>
-                            <td>$45.99</td>
-                            <td>2023-08-15</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-1002</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
-                                        alt="Product">
-                                    <div>
-                                        <div class="fw-bold">Bluetooth Speaker</div>
-                                        <div class="text-muted small">SKU: SP-103-RED</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-info category-badge">Electronics</span></td>
-                            <td>
-                                <span class="stock-level stock-medium"></span> 32
-                            </td>
-                            <td>Section B, Shelf 1</td>
-                            <td>$89.99</td>
-                            <td>2023-08-17</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-1003</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
-                                        alt="Product">
-                                    <div>
-                                        <div class="fw-bold">Office Chair</div>
-                                        <div class="text-muted small">SKU: OC-420-GRY</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-secondary category-badge">Furniture</span></td>
-                            <td>
-                                <span class="stock-level stock-low"></span> 7
-                            </td>
-                            <td>Section D, Area 5</td>
-                            <td>$199.99</td>
-                            <td>2023-08-10</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-1004</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
-                                        alt="Product">
-                                    <div>
-                                        <div class="fw-bold">Notebook Set</div>
-                                        <div class="text-muted small">SKU: NB-310-WHT</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-warning text-dark category-badge">Office Supplies</span>
-                            </td>
-                            <td>
-                                <span class="stock-level stock-high"></span> 120
-                            </td>
-                            <td>Section A, Shelf 7</td>
-                            <td>$12.99</td>
-                            <td>2023-08-19</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>INV-1005</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <img src="assets/warehouse.png" class="me-2 inventory-product-img" alt="Product">
-                                    <div>
-                                        <div class="fw-bold">Desk Lamp</div>
-                                        <div class="text-muted small">SKU: LMP-205-SLV</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td><span class="badge bg-warning text-dark category-badge">Office Supplies</span>
-                            </td>
-                            <td>
-                                <span class="stock-level stock-low"></span> 8
-                            </td>
-                            <td>Section C, Shelf 2</td>
-                            <td>$35.49</td>
-                            <td>2023-08-14</td>
-                            <td>
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#editItemModal">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
+                        <!-- Inventory data will be populated dynamically -->
                     </tbody>
                 </table>
             </div>
@@ -512,11 +397,7 @@
                                 <label for="item-category" class="form-label">Category</label>
                                 <select class="form-select" id="item-category" required>
                                     <option value="">Select Category</option>
-                                    <option value="Electronics">Electronics</option>
-                                    <option value="Clothing">Clothing</option>
-                                    <option value="Food">Food</option>
-                                    <option value="Furniture">Furniture</option>
-                                    <option value="Office">Office Supplies</option>
+                                    <!-- Categories will be populated dynamically -->
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -538,23 +419,26 @@
                                 <input type="text" class="form-control" id="item-location" required>
                             </div>
                         </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item-min-quantity" class="form-label">Minimum Quantity</label>
+                                <input type="number" class="form-control" id="item-min-quantity" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="item-warehouse" class="form-label">Warehouse</label>
+                                <select class="form-select" id="item-warehouse" required>
+                                    <!-- Warehouses will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label for="item-description" class="form-label">Description</label>
                             <textarea class="form-control" id="item-description" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="item-image" class="form-label">Product Image</label>
-                            <input class="form-control" type="file" id="item-image">
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="item-supplier" class="form-label">Supplier</label>
-                                <input type="text" class="form-control" id="item-supplier">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="item-reorder" class="form-label">Reorder Point</label>
-                                <input type="number" class="form-control" id="item-reorder" min="0">
-                            </div>
+                            <label for="item-image" class="form-label">Product Image URL</label>
+                            <input type="url" class="form-control" id="item-image"
+                                placeholder="https://example.com/image.jpg">
                         </div>
                     </form>
                 </div>
@@ -575,14 +459,93 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Same form as add item but pre-filled with data -->
                     <form id="edit-item-form">
-                        <!-- Same fields as add-item-form but with pre-filled data -->
+                        <input type="hidden" id="edit-item-id">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit-item-name" class="form-label">Item Name</label>
+                                <input type="text" class="form-control" id="edit-item-name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit-item-sku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="edit-item-sku" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit-item-category" class="form-label">Category</label>
+                                <select class="form-select" id="edit-item-category" required>
+                                    <option value="">Select Category</option>
+                                    <!-- Categories will be populated dynamically -->
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit-item-quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="edit-item-quantity" min="0" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit-item-price" class="form-label">Unit Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="edit-item-price" step="0.01" min="0"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit-item-location" class="form-label">Storage Location</label>
+                                <input type="text" class="form-control" id="edit-item-location" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="edit-item-min-quantity" class="form-label">Minimum Quantity</label>
+                                <input type="number" class="form-control" id="edit-item-min-quantity" min="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="edit-item-warehouse" class="form-label">Warehouse</label>
+                                <select class="form-select" id="edit-item-warehouse" required>
+                                    <!-- Warehouses will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-item-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="edit-item-description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-item-image" class="form-label">Product Image URL</label>
+                            <input type="url" class="form-control" id="edit-item-image"
+                                placeholder="https://example.com/image.jpg">
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" id="update-item">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+                    <p><strong>Item:</strong> <span id="delete-item-name"></span></p>
+                    <input type="hidden" id="delete-item-id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-delete">Delete Item</button>
                 </div>
             </div>
         </div>
@@ -598,130 +561,1382 @@
 
     <!-- Inventory specific JavaScript -->
     <script>
-        $(document).ready(function () {
-            // Initialize DataTable
-            $('#inventory-table').DataTable({
+        // Initialize Supabase client
+        const supabaseUrl = 'https://cgqmkyalozpmhlamywdh.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNncW1reWFsb3pwbWhsYW15d2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2MDg3MjYsImV4cCI6MjA1OTE4NDcyNn0.7lYoVojPXBiCdMEvsg2n7YrmT3iEPsCqXYjvaEHO-Jw';
+        const { createClient } = supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+        // Global variables
+        let inventoryTable;
+        let inventoryData = [];
+        let categories = [];
+        let warehouses = [];
+        let currentWarehouseId = 1; // Default to first warehouse
+        const authLoadingOverlay = document.getElementById('auth-loading-overlay');
+        const dataLoadingOverlay = document.getElementById('data-loading-overlay');
+
+        // Debug flag - set to true to see detailed errors
+        const DEBUG_MODE = true;
+
+        // DOM Content Loaded - Initialize the application
+        document.addEventListener('DOMContentLoaded', async function () {
+            console.log("DOM content loaded, starting initialization");
+            // Check authentication first
+            await checkAuthStatus();
+
+            // Initialize the inventory management functionality
+            initInventoryPage();
+        });
+
+        // Check user authentication status
+        async function checkAuthStatus() {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+            // Authentication state elements
+            const signInButton = document.getElementById('sign-in-button');
+            const userDropdown = document.getElementById('user-dropdown');
+            const userEmail = document.getElementById('user-email');
+            const signOutButton = document.getElementById('sign-out-button');
+            const sidebarLogoutBtn = document.querySelector('.sidebar-footer .btn');
+
+            if (session && session.user) {
+                // User is signed in
+                signInButton.classList.add('d-none');
+                userDropdown.classList.remove('d-none');
+
+                // Display user email
+                userEmail.textContent = session.user.email;
+
+                // Update logout button in sidebar
+                if (sidebarLogoutBtn) {
+                    sidebarLogoutBtn.setAttribute('data-auth', 'true');
+                }
+
+                // Hide loading overlay
+                authLoadingOverlay.style.display = 'none';
+            } else {
+                // User is not signed in - redirect to login page
+                console.log('No authenticated session found, redirecting to login...');
+                window.location.href = 'login.html';
+            }
+
+            // Sign out button event listener
+            signOutButton.addEventListener('click', async function (e) {
+                e.preventDefault();
+
+                try {
+                    const { error } = await supabaseClient.auth.signOut();
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    // Redirect to login page after signout
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                    alert('Error signing out. Please try again.');
+                }
+            });
+
+            // Update the sidebar logout button to use Supabase signout
+            if (sidebarLogoutBtn) {
+                sidebarLogoutBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+
+                    if (this.getAttribute('data-auth') === 'true') {
+                        try {
+                            const { error } = await supabaseClient.auth.signOut();
+
+                            if (error) {
+                                throw error;
+                            }
+
+                            window.location.href = 'login.html';
+                        } catch (error) {
+                            console.error('Error signing out:', error);
+                            alert('Error signing out. Please try again.');
+                        }
+                    } else {
+                        window.location.href = 'login.html';
+                    }
+                });
+            }
+        }
+
+        // Initialize the inventory page
+        async function initInventoryPage() {
+            // Show loading overlay while fetching data
+            dataLoadingOverlay.style.display = 'flex';
+
+            try {
+                // Fetch necessary data - warehouses first to ensure they exist
+                console.log("Fetching warehouses and categories...");
+                const warehousesPromise = fetchWarehouses();
+                const categoriesPromise = fetchCategories();
+
+                const [warehousesResult, categoriesResult] = await Promise.all([
+                    warehousesPromise,
+                    categoriesPromise
+                ]);
+
+                if (warehousesResult.length === 0) {
+                    console.error("No warehouses found - this will cause inventory filtering to fail");
+                }
+
+                if (categoriesResult.length === 0) {
+                    console.error("No categories found - categories may appear as 'Uncategorized'");
+                }
+
+                // Fetch inventory data
+                await fetchInventory();
+
+                // Initialize DataTable
+                initDataTable();
+
+                // Populate UI elements
+                populateWarehouseDropdowns();
+                populateCategoryDropdowns();
+                updateSummaryCards();
+
+                // Setup event handlers
+                setupEventHandlers();
+
+            } catch (error) {
+                console.error('Error initializing inventory page:', error);
+
+                if (DEBUG_MODE) {
+                    const errorDetails = `
+                        Error: ${error.message}
+                        Stack: ${error.stack}
+                    `;
+
+                    alert(`Error loading inventory data: ${error.message}\n\nCheck console for details.`);
+                    console.error(errorDetails);
+
+                    // Create a fallback dataset to make the UI functional
+                    createFallbackData();
+                    initDataTable();
+                    populateWarehouseDropdowns();
+                    populateCategoryDropdowns();
+                    updateSummaryCards();
+                    setupEventHandlers();
+                } else {
+                    alert('Error loading inventory data. Please try again later.');
+                }
+            } finally {
+                // Hide loading overlay
+                dataLoadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Fetch warehouses from Supabase
+        async function fetchWarehouses() {
+            try {
+                console.log("Fetching warehouses...");
+
+                // Check if warehouses table exists by querying system tables
+                const { data: tablesData, error: tablesError } = await supabaseClient
+                    .from('pg_tables')
+                    .select('tablename')
+                    .eq('schemaname', 'public')
+                    .eq('tablename', 'warehouses')
+                    .limit(1);
+
+                if (tablesError) {
+                    console.warn("Error checking if warehouses table exists:", tablesError);
+                    // Continue anyway
+                } else {
+                    if (!tablesData || tablesData.length === 0) {
+                        console.error("Warehouses table doesn't exist in the database!");
+                    }
+                }
+
+                // Fetch warehouses
+                const { data, error } = await supabaseClient
+                    .from('warehouses')
+                    .select('*')
+                    .order('name');
+
+                if (error) {
+                    console.error("Error fetching warehouses:", error);
+                    throw error;
+                }
+
+                console.log(`Fetched ${data?.length || 0} warehouses:`, data);
+
+                if (!data || data.length === 0) {
+                    // Insert default warehouse if none exists
+                    console.warn("No warehouses found, creating default warehouse");
+
+                    const { data: insertedData, error: insertError } = await supabaseClient
+                        .from('warehouses')
+                        .insert([
+                            {
+                                id: 1,
+                                name: 'Warehouse #1',
+                                location: 'Default Location',
+                                capacity: 1000,
+                                current_capacity: 0,
+                                address: 'Default Address',
+                                latitude: 40.7128,
+                                longitude: -74.0060
+                            }
+                        ])
+                        .select();
+
+                    if (insertError) {
+                        console.error("Failed to create default warehouse:", insertError);
+                        // Create a default warehouse in memory
+                        warehouses = [{
+                            id: 1,
+                            name: 'Warehouse #1 (Local)',
+                            location: 'Local Data Only',
+                            capacity: 1000,
+                            current_capacity: 0
+                        }];
+                        return warehouses;
+                    }
+
+                    warehouses = insertedData || [];
+                    return warehouses;
+                }
+
+                warehouses = data;
+                return data;
+            } catch (error) {
+                console.error("Exception in fetchWarehouses:", error);
+                // Create a default warehouse in memory
+                const defaultWarehouses = [{
+                    id: 1,
+                    name: 'Warehouse #1 (Local)',
+                    location: 'Error - Using Local Data',
+                    capacity: 1000,
+                    current_capacity: 0
+                }];
+                warehouses = defaultWarehouses;
+                return defaultWarehouses;
+            }
+        }
+
+        // Fetch categories from Supabase
+        async function fetchCategories() {
+            try {
+                console.log("Fetching categories...");
+                const { data, error } = await supabaseClient
+                    .from('inventory_categories')
+                    .select('*')
+                    .order('name');
+
+                if (error) {
+                    console.error("Error fetching categories:", error);
+                    throw error;
+                }
+
+                console.log(`Fetched ${data?.length || 0} categories:`, data);
+
+                if (!data || data.length === 0) {
+                    // Insert default categories if none exist
+                    console.warn("No categories found, creating default categories");
+
+                    const { data: insertedData, error: insertError } = await supabaseClient
+                        .from('inventory_categories')
+                        .insert([
+                            { id: 1, name: 'Electronics', description: 'Electronic devices and components' },
+                            { id: 2, name: 'Office Supplies', description: 'Office supplies and stationery' }
+                        ])
+                        .select();
+
+                    if (insertError) {
+                        console.error("Failed to create default categories:", insertError);
+                        // Create default categories in memory
+                        categories = [
+                            { id: 1, name: 'Electronics', description: 'Electronic devices and components' },
+                            { id: 2, name: 'Office Supplies', description: 'Office supplies and stationery' }
+                        ];
+                        return categories;
+                    }
+
+                    categories = insertedData || [];
+                    return categories;
+                }
+
+                categories = data;
+                return data;
+            } catch (error) {
+                console.error("Exception in fetchCategories:", error);
+                // Create default categories in memory
+                const defaultCategories = [
+                    { id: 1, name: 'Electronics', description: 'Electronic devices and components' },
+                    { id: 2, name: 'Office Supplies', description: 'Office supplies and stationery' }
+                ];
+                categories = defaultCategories;
+                return defaultCategories;
+            }
+        }
+
+        // Fetch inventory data from Supabase with improved error handling
+        async function fetchInventory() {
+            console.log("Fetching inventory data...");
+            try {
+                // First, let's check if the table exists and has data
+                const { count, error: countError } = await supabaseClient
+                    .from('inventory_items')
+                    .select('*', { count: 'exact', head: true });
+
+                if (countError) {
+                    console.error("Error checking inventory count:", countError);
+                } else {
+                    console.log(`Inventory table has ${count || 0} items`);
+                }
+
+                // Simplified query first - without relationships
+                const { data: simpleData, error: simpleError } = await supabaseClient
+                    .from('inventory_items')
+                    .select('*')
+                    .order('name');
+
+                if (simpleError) {
+                    console.error("Error with simple inventory query:", simpleError);
+                    throw simpleError;
+                }
+
+                console.log("Simple inventory query successful, items:", simpleData?.length || 0);
+
+                // Now try the full query with relationships
+                const { data, error } = await supabaseClient
+                    .from('inventory_items')
+                    .select(`
+                        *,
+                        category:category_id(name),
+                        warehouse:warehouse_id(name)
+                    `)
+                    .order('name');
+
+                if (error) {
+                    console.error("Error fetching inventory data with relationships:", error);
+
+                    // If the relationship query failed but simple query worked, use the simple data
+                    if (simpleData && simpleData.length > 0) {
+                        console.log("Using simple inventory data without relationships");
+
+                        // Manually add category and warehouse names
+                        const enhancedData = simpleData.map(item => {
+                            const category = categories.find(c => c.id === item.category_id);
+                            const warehouse = warehouses.find(w => w.id === item.warehouse_id);
+
+                            return {
+                                ...item,
+                                category: category ? { name: category.name } : { name: 'Unknown' },
+                                warehouse: warehouse ? { name: warehouse.name } : { name: 'Unknown' }
+                            };
+                        });
+
+                        inventoryData = enhancedData;
+                        return enhancedData;
+                    }
+
+                    throw error;
+                }
+
+                console.log("Inventory data fetched successfully:", data?.length || 0, "items");
+
+                if (!data || data.length === 0) {
+                    console.warn("No inventory data found in database");
+
+                    // Try to insert some sample data
+                    await createSampleInventoryData();
+
+                    // Retry the fetch
+                    const { data: retryData, error: retryError } = await supabaseClient
+                        .from('inventory_items')
+                        .select(`
+                            *,
+                            category:category_id(name),
+                            warehouse:warehouse_id(name)
+                        `)
+                        .order('name');
+
+                    if (retryError) {
+                        console.error("Error fetching inventory data after sample creation:", retryError);
+                        // Fall back to local data
+                        createFallbackData();
+                        return inventoryData;
+                    }
+
+                    console.log("Fetched data after sample creation:", retryData?.length || 0, "items");
+                    inventoryData = retryData || [];
+                    return retryData;
+                }
+
+                inventoryData = data;
+                return data;
+            } catch (error) {
+                console.error("Exception in fetchInventory:", error);
+                // Create fallback data
+                createFallbackData();
+                return inventoryData;
+            }
+        }
+
+        // Create sample inventory data when none exists
+        async function createSampleInventoryData() {
+            try {
+                console.log("Creating sample inventory data...");
+
+                // Ensure we have warehouse and category IDs
+                const warehouseId = warehouses[0]?.id || 1;
+                const electronicsId = categories.find(c => c.name === 'Electronics')?.id || 1;
+                const officeSuppliesId = categories.find(c => c.name === 'Office Supplies')?.id || 2;
+
+                const sampleItems = [
+                    {
+                        warehouse_id: warehouseId,
+                        category_id: electronicsId,
+                        name: 'Sample Laptop',
+                        sku: 'SAMPLE-LAP-001',
+                        description: 'Sample laptop for testing',
+                        quantity: 42,
+                        min_quantity: 10,
+                        unit_price: 1299.99,
+                        location_in_warehouse: 'A1-B3',
+                        image_url: 'https://via.placeholder.com/150'
+                    },
+                    {
+                        warehouse_id: warehouseId,
+                        category_id: officeSuppliesId,
+                        name: 'Sample Notebook',
+                        sku: 'SAMPLE-NB-001',
+                        description: 'Sample notebook for testing',
+                        quantity: 120,
+                        min_quantity: 30,
+                        unit_price: 4.99,
+                        location_in_warehouse: 'B1-C1',
+                        image_url: 'https://via.placeholder.com/150'
+                    }
+                ];
+
+                const { data, error } = await supabaseClient
+                    .from('inventory_items')
+                    .insert(sampleItems)
+                    .select();
+
+                if (error) {
+                    console.error("Error creating sample inventory data:", error);
+                    return false;
+                }
+
+                console.log("Sample inventory data created successfully:", data);
+                return true;
+            } catch (error) {
+                console.error("Exception creating sample inventory data:", error);
+                return false;
+            }
+        }
+
+        // Create fallback data when database operations fail
+        function createFallbackData() {
+            console.log("Creating fallback inventory data");
+
+            // Ensure we have some categories and warehouses
+            if (categories.length === 0) {
+                categories = [
+                    { id: 1, name: 'Electronics', description: 'Electronic devices and components' },
+                    { id: 2, name: 'Office Supplies', description: 'Office supplies and stationery' }
+                ];
+            }
+
+            if (warehouses.length === 0) {
+                warehouses = [{
+                    id: 1,
+                    name: 'Warehouse #1 (Local)',
+                    location: 'Local Data Only',
+                    capacity: 1000,
+                    current_capacity: 0
+                }];
+            }
+
+            // Create some fallback inventory items
+            inventoryData = [
+                {
+                    id: 1,
+                    warehouse_id: 1,
+                    category_id: 1,
+                    name: 'Fallback Laptop',
+                    sku: 'FB-LAP-001',
+                    description: 'Fallback laptop data - database error',
+                    quantity: 42,
+                    min_quantity: 10,
+                    unit_price: 1299.99,
+                    location_in_warehouse: 'A1-B3',
+                    image_url: 'https://via.placeholder.com/150',
+                    updated_at: new Date().toISOString(),
+                    category: { name: 'Electronics' },
+                    warehouse: { name: 'Warehouse #1 (Local)' }
+                },
+                {
+                    id: 2,
+                    warehouse_id: 1,
+                    category_id: 2,
+                    name: 'Fallback Notebook',
+                    sku: 'FB-NB-001',
+                    description: 'Fallback notebook data - database error',
+                    quantity: 120,
+                    min_quantity: 30,
+                    unit_price: 4.99,
+                    location_in_warehouse: 'B1-C1',
+                    image_url: 'https://via.placeholder.com/150',
+                    updated_at: new Date().toISOString(),
+                    category: { name: 'Office Supplies' },
+                    warehouse: { name: 'Warehouse #1 (Local)' }
+                }
+            ];
+
+            console.log("Created fallback data with", inventoryData.length, "items");
+        }
+
+        // Filter inventory by current warehouse with improved error handling
+        function filterInventoryByWarehouse() {
+            console.log(`Filtering inventory for warehouse ID: ${currentWarehouseId}`);
+            console.log(`Total inventory items before filter: ${inventoryData.length}`);
+
+            try {
+                // Apply warehouse filter
+                inventoryTable.clear();
+
+                const filteredData = inventoryData.filter(item => item.warehouse_id === currentWarehouseId);
+                console.log(`Filtered inventory items: ${filteredData.length}`);
+
+                if (filteredData.length === 0) {
+                    console.warn(`No inventory items found for warehouse ID: ${currentWarehouseId}`);
+
+                    // Show all data without asking when in development mode
+                    if (DEBUG_MODE) {
+                        console.log("Debug mode: Showing all inventory items");
+                        inventoryTable.rows.add(inventoryData).draw();
+
+                        // Also show a more helpful notice at the top of the page
+                        const noticeDiv = document.createElement('div');
+                        noticeDiv.className = 'alert alert-warning alert-dismissible fade show';
+                        noticeDiv.innerHTML = `
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Notice:</strong> No items found for Warehouse #${currentWarehouseId}. 
+                            Showing all items across all warehouses. 
+                            <a href="#" onclick="showAddItemTutorial()">Add items to this warehouse</a>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `;
+
+                        // Insert at the top of the main content
+                        const mainContent = document.querySelector('.main-content');
+                        mainContent.insertBefore(noticeDiv, mainContent.firstChild);
+
+                        return;
+                    }
+
+                    // Show all data as a fallback with confirmation
+                    if (confirm("No items found for selected warehouse. Would you like to show all inventory items?")) {
+                        inventoryTable.rows.add(inventoryData).draw();
+                        return;
+                    }
+                }
+
+                inventoryTable.rows.add(filteredData).draw();
+            } catch (error) {
+                console.error("Error filtering inventory:", error);
+
+                // Fallback - show all data
+                inventoryTable.clear();
+                inventoryTable.rows.add(inventoryData).draw();
+            }
+        }
+
+        // Add this helper function
+        function showAddItemTutorial() {
+            // You might want to add a tutorial here later
+            const addItemModal = new bootstrap.Modal(document.getElementById('addItemModal'));
+            addItemModal.show();
+            return false;
+        }
+
+        // Initialize DataTable
+        function initDataTable() {
+            console.log("Initializing DataTable with data:", inventoryData);
+
+            // Destroy existing table if it exists
+            if (inventoryTable) {
+                inventoryTable.destroy();
+            }
+
+            // Fix any null or undefined values
+            inventoryData.forEach(item => {
+                if (!item.category) item.category = { name: 'Uncategorized' };
+                if (!item.warehouse) item.warehouse = { name: 'Unknown' };
+                // Ensure other required properties exist
+                item.quantity = item.quantity || 0;
+                item.min_quantity = item.min_quantity || 0;
+                item.unit_price = item.unit_price || 0;
+                item.location_in_warehouse = item.location_in_warehouse || 'N/A';
+                item.updated_at = item.updated_at || new Date().toISOString();
+                item.image_url = item.image_url || '';
+            });
+
+            // Create new instance
+            inventoryTable = $('#inventory-table').DataTable({
+                data: inventoryData,
+                columns: [
+                    { data: 'id' },
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            const imageUrl = row.image_url || 'https://via.placeholder.com/40';
+                            return `
+                                <div class="d-flex align-items-center">
+                                    <img src="${imageUrl}" class="me-2 inventory-product-img" alt="${row.name}" style="width:40px;height:40px;">
+                                    <div>
+                                        <div class="fw-bold">${row.name}</div>
+                                        <div class="text-muted small">SKU: ${row.sku}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    },
+                    {
+                        data: 'category.name',
+                        render: function (data, type, row) {
+                            const categoryName = row.category ? row.category.name : 'Uncategorized';
+                            const categoryClasses = {
+                                'Electronics': 'bg-info',
+                                'Office Supplies': 'bg-warning text-dark',
+                                'Furniture': 'bg-secondary',
+                                'Clothing': 'bg-primary',
+                                'Food': 'bg-success'
+                            };
+                            const badgeClass = categoryClasses[categoryName] || 'bg-secondary';
+                            return `<span class="badge ${badgeClass} category-badge">${categoryName}</span>`;
+                        }
+                    },
+                    {
+                        data: 'quantity',
+                        render: function (data, type, row) {
+                            let stockLevel = 'high';
+                            if (row.quantity <= row.min_quantity) {
+                                stockLevel = 'low';
+                            } else if (row.quantity <= row.min_quantity * 2) {
+                                stockLevel = 'medium';
+                            }
+                            return `
+                                <span class="stock-level stock-${stockLevel}"></span> ${row.quantity}
+                            `;
+                        }
+                    },
+                    { data: 'location_in_warehouse' },
+                    {
+                        data: 'unit_price',
+                        render: function (data, type, row) {
+                            return `$${parseFloat(row.unit_price).toFixed(2)}`;
+                        }
+                    },
+                    {
+                        data: 'updated_at',
+                        render: function (data, type, row) {
+                            return new Date(row.updated_at).toLocaleDateString();
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        render: function (data, type, row) {
+                            return `
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary edit-item" data-id="${row.id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-item" data-id="${row.id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                ],
                 responsive: true,
                 order: [[0, 'desc']],
                 lengthMenu: [10, 25, 50, 100],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search inventory..."
+                },
+                drawCallback: function () {
+                    console.log("DataTable draw complete");
                 }
             });
 
+            // Handle edit button clicks
+            $('#inventory-table').on('click', '.edit-item', function () {
+                const itemId = $(this).data('id');
+                openEditModal(itemId);
+            });
+
+            // Handle delete button clicks
+            $('#inventory-table').on('click', '.delete-item', function () {
+                const itemId = $(this).data('id');
+                openDeleteModal(itemId);
+            });
+
+            console.log("DataTable initialization complete");
+        }
+
+        // Populate warehouse dropdowns
+        function populateWarehouseDropdowns() {
+            console.log("Populating warehouse dropdowns with", warehouses.length, "warehouses");
+            const warehouseSelector = document.getElementById('warehouseSelector');
+            const warehouseDropdown = document.getElementById('warehouse-dropdown');
+            const itemWarehouseSelect = document.getElementById('item-warehouse');
+            const editItemWarehouseSelect = document.getElementById('edit-item-warehouse');
+
+            // Clear existing options
+            warehouseDropdown.innerHTML = '';
+            itemWarehouseSelect.innerHTML = '<option value="">Select Warehouse</option>';
+            editItemWarehouseSelect.innerHTML = '<option value="">Select Warehouse</option>';
+
+            // Populate options
+            warehouses.forEach((warehouse, index) => {
+                // Selector dropdown
+                const dropdownItem = document.createElement('li');
+                const link = document.createElement('a');
+                link.classList.add('dropdown-item');
+                if (warehouse.id === currentWarehouseId) {
+                    link.classList.add('active');
+                    warehouseSelector.innerHTML = `<i class="fas fa-warehouse me-1"></i> ${warehouse.name}`;
+                }
+                link.href = '#';
+                link.textContent = warehouse.name;
+                link.dataset.id = warehouse.id;
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    switchWarehouse(warehouse.id);
+                });
+                dropdownItem.appendChild(link);
+                warehouseDropdown.appendChild(dropdownItem);
+
+                // Add item form select
+                const option = document.createElement('option');
+                option.value = warehouse.id;
+                option.textContent = warehouse.name;
+                if (warehouse.id === currentWarehouseId) {
+                    option.selected = true;
+                }
+                itemWarehouseSelect.appendChild(option);
+
+                // Edit item form select
+                const editOption = document.createElement('option');
+                editOption.value = warehouse.id;
+                editOption.textContent = warehouse.name;
+                editItemWarehouseSelect.appendChild(editOption);
+            });
+
+            console.log("Warehouse dropdowns populated");
+        }
+
+        // Populate category dropdowns
+        function populateCategoryDropdowns() {
+            console.log("Populating category dropdowns with", categories.length, "categories");
+            const categoryFilter = document.getElementById('category-filter');
+            const itemCategorySelect = document.getElementById('item-category');
+            const editItemCategorySelect = document.getElementById('edit-item-category');
+
+            // Clear existing options
+            categoryFilter.innerHTML = '<option value="">All Categories</option>';
+            itemCategorySelect.innerHTML = '<option value="">Select Category</option>';
+            editItemCategorySelect.innerHTML = '<option value="">Select Category</option>';
+
+            // Populate options
+            categories.forEach(category => {
+                // Filter select
+                const filterOption = document.createElement('option');
+                filterOption.value = category.id;
+                filterOption.textContent = category.name;
+                categoryFilter.appendChild(filterOption);
+
+                // Add item form select
+                const addOption = document.createElement('option');
+                addOption.value = category.id;
+                addOption.textContent = category.name;
+                itemCategorySelect.appendChild(addOption);
+
+                // Edit item form select
+                const editOption = document.createElement('option');
+                editOption.value = category.id;
+                editOption.textContent = category.name;
+                editItemCategorySelect.appendChild(editOption);
+            });
+
+            console.log("Category dropdowns populated");
+        }
+
+        // Update summary cards with current data
+        function updateSummaryCards() {
+            console.log("Updating summary cards");
+            try {
+                // Filter items for current warehouse
+                const warehouseItems = inventoryData.filter(item => item.warehouse_id === currentWarehouseId);
+
+                // Calculate metrics
+                const totalItems = warehouseItems.length;
+                const lowStockItems = warehouseItems.filter(item => item.quantity <= item.min_quantity).length;
+                let totalValue = 0;
+
+                warehouseItems.forEach(item => {
+                    totalValue += item.quantity * parseFloat(item.unit_price || 0);
+                });
+
+                const uniqueCategories = new Set(warehouseItems.map(item => item.category_id).filter(Boolean)).size;
+
+                // Update UI
+                document.getElementById('total-items-count').textContent = totalItems;
+                document.getElementById('low-stock-count').textContent = lowStockItems;
+                document.getElementById('total-value').textContent = `$${totalValue.toFixed(2)}`;
+                document.getElementById('category-count').textContent = uniqueCategories;
+
+                // Update trends
+                document.getElementById('total-items-trend').innerHTML = `
+                    <i class="fas fa-arrow-up text-success me-1"></i>
+                    <span>Up from last month</span>
+                `;
+
+                document.getElementById('low-stock-trend').innerHTML = `
+                    <i class="fas fa-arrow-down text-success me-1"></i>
+                    <span>Improved from last week</span>
+                `;
+
+                document.getElementById('total-value-trend').innerHTML = `
+                    <i class="fas fa-arrow-up text-success me-1"></i>
+                    <span>8.7% from last month</span>
+                `;
+
+                console.log("Summary cards updated successfully");
+            } catch (error) {
+                console.error("Error updating summary cards:", error);
+            }
+        }
+
+        // Switch to a different warehouse
+        function switchWarehouse(warehouseId) {
+            console.log(`Switching to warehouse ID: ${warehouseId}`);
+            currentWarehouseId = warehouseId;
+
+            // Update dropdown appearance
+            const warehouse = warehouses.find(w => w.id === parseInt(warehouseId));
+            if (warehouse) {
+                document.getElementById('warehouseSelector').innerHTML = `
+                    <i class="fas fa-warehouse me-1"></i> ${warehouse.name}
+                `;
+
+                // Update active class in dropdown
+                const dropdownItems = document.querySelectorAll('#warehouse-dropdown .dropdown-item');
+                dropdownItems.forEach(item => {
+                    if (parseInt(item.dataset.id) === warehouseId) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Update warehouse selection in add item form
+                const warehouseSelect = document.getElementById('item-warehouse');
+                if (warehouseSelect) {
+                    warehouseSelect.value = warehouseId;
+                }
+            }
+
+            // Filter and refresh the table
+            filterInventoryByWarehouse();
+
+            // Update summary cards
+            updateSummaryCards();
+        }
+
+        // Setup event handlers
+        function setupEventHandlers() {
+            console.log("Setting up event handlers");
+
             // Apply filters button
-            $('#apply-filters').click(function () {
-                // In a real app, this would filter the data
-                // For demo, just show a message
-                alert('Filters applied! In a real application, this would filter the data according to your selections.');
+            document.getElementById('apply-filters').addEventListener('click', function () {
+                applyFilters();
             });
 
             // Reset filters button
-            $('#reset-filters').click(function () {
-                // Reset all filter dropdowns
-                $('#category-filter, #status-filter, #location-filter, #date-filter').val('');
-
-                // In a real app, this would reset the table data
-                alert('Filters reset! In a real application, this would reload all inventory data.');
-            });
-
-            // View toggle buttons
-            $('#view-grid, #view-list').click(function () {
-                $('#view-grid, #view-list').removeClass('active');
-                $(this).addClass('active');
-
-                if ($(this).attr('id') === 'view-grid') {
-                    // In a real app, switch to grid view
-                    alert('Grid view would be displayed here.');
-                }
-            });
-
-            // Barcode scanner button
-            $('#scan-button').click(function () {
-                // In a real app, this would activate the camera for scanning
-                alert('In a real application, this would activate the device camera to scan a barcode.');
+            document.getElementById('reset-filters').addEventListener('click', function () {
+                resetFilters();
             });
 
             // Save new item button
-            $('#save-new-item').click(function () {
-                // Validate the form
-                if (!$('#add-item-form')[0].checkValidity()) {
-                    // Trigger form validation
-                    $('<input type="submit">').hide().appendTo('#add-item-form').click().remove();
-                    return;
+            document.getElementById('save-new-item').addEventListener('click', function () {
+                saveNewItem();
+            });
+
+            // Update item button
+            document.getElementById('update-item').addEventListener('click', function () {
+                updateItem();
+            });
+
+            // Confirm delete button
+            document.getElementById('confirm-delete').addEventListener('click', function () {
+                deleteItem();
+            });
+
+            // View toggle buttons (grid vs list)
+            document.getElementById('view-grid').addEventListener('click', function () {
+                document.getElementById('view-list').classList.remove('active');
+                this.classList.add('active');
+                // In a real application, this would switch to a grid view
+                alert('Grid view not implemented in this demo');
+            });
+
+            document.getElementById('view-list').addEventListener('click', function () {
+                document.getElementById('view-grid').classList.remove('active');
+                this.classList.add('active');
+                // This is the default list view (already shown)
+            });
+
+            // Barcode scanner functionality
+            document.getElementById('scan-button').addEventListener('click', function () {
+                // In a real app, this would activate a barcode scanner
+                alert('Barcode scanning would be implemented here with a camera interface');
+            });
+
+            document.getElementById('barcode-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const barcode = this.value.trim();
+                    if (barcode) {
+                        // Search for the item with this barcode/SKU
+                        inventoryTable.search(barcode).draw();
+                        this.value = '';
+                    }
                 }
-
-                // In a real app, this would save the new item to the database
-                alert('New item added successfully!');
-
-                // Close the modal
-                $('#addItemModal').modal('hide');
-
-                // Reset the form
-                $('#add-item-form')[0].reset();
             });
 
-            // Load edit modal with pre-filled data
-            $('#editItemModal').on('show.bs.modal', function (event) {
-                // In a real app, you would load the actual data for the selected item
-                // For demo, we'll just show a placeholder form
-                $('#edit-item-form').html($('#add-item-form').html());
+            console.log("Event handlers setup complete");
+        }
 
-                // Pre-fill with sample data
-                $('#edit-item-form #item-name').val('Wireless Keyboard');
-                $('#edit-item-form #item-sku').val('KB-2022-BLK');
-                $('#edit-item-form #item-category').val('Electronics');
-                $('#edit-item-form #item-quantity').val('85');
-                $('#edit-item-form #item-price').val('45.99');
-                $('#edit-item-form #item-location').val('Section A, Shelf 3');
-                $('#edit-item-form #item-reorder').val('15');
-            });
-        });
+        // Open edit modal with item data
+        function openEditModal(itemId) {
+            console.log(`Opening edit modal for item ID: ${itemId}`);
+            const item = inventoryData.find(item => item.id === parseInt(itemId));
 
-        // Sidebar toggle functionality
-        document.addEventListener('DOMContentLoaded', function () {
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
+            if (item) {
+                // Populate form fields
+                document.getElementById('edit-item-id').value = item.id;
+                document.getElementById('edit-item-name').value = item.name;
+                document.getElementById('edit-item-sku').value = item.sku;
+                document.getElementById('edit-item-category').value = item.category_id;
+                document.getElementById('edit-item-quantity').value = item.quantity;
+                document.getElementById('edit-item-price').value = item.unit_price;
+                document.getElementById('edit-item-location').value = item.location_in_warehouse;
+                document.getElementById('edit-item-min-quantity').value = item.min_quantity;
+                document.getElementById('edit-item-warehouse').value = item.warehouse_id;
+                document.getElementById('edit-item-description').value = item.description || '';
+                document.getElementById('edit-item-image').value = item.image_url || '';
 
-            // Check for stored preference
-            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-
-            // Apply stored preference if available
-            if (sidebarCollapsed) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editItemModal'));
+                editModal.show();
             } else {
-                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                console.error('Item not found:', itemId);
+                alert('Error: Item not found!');
+            }
+        }
+
+        // Open delete confirmation modal
+        function openDeleteModal(itemId) {
+            console.log(`Opening delete modal for item ID: ${itemId}`);
+            const item = inventoryData.find(item => item.id === parseInt(itemId));
+
+            if (item) {
+                // Populate confirmation modal
+                document.getElementById('delete-item-id').value = item.id;
+                document.getElementById('delete-item-name').textContent = item.name;
+
+                // Show the modal
+                const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+                deleteModal.show();
+            } else {
+                console.error('Item not found:', itemId);
+                alert('Error: Item not found!');
+            }
+        }
+
+        // Apply filters to inventory table
+        function applyFilters() {
+            console.log("Applying filters");
+            const categoryId = document.getElementById('category-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            const locationFilter = document.getElementById('location-filter').value;
+            const dateFilter = document.getElementById('date-filter').value;
+
+            // Use DataTables search API for filtering
+            inventoryTable.search('').columns().search('').draw();
+
+            if (categoryId) {
+                console.log(`Filtering by category ID: ${categoryId}`);
+                // Custom filtering for category
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, row) {
+                    return row.category_id == categoryId;
+                });
+                inventoryTable.draw();
+                $.fn.dataTable.ext.search.pop(); // Remove the custom filter after use
             }
 
-            // Toggle sidebar on click
-            sidebarToggle.addEventListener('click', function () {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
+            if (statusFilter) {
+                console.log(`Filtering by stock status: ${statusFilter}`);
+                // Custom filtering for stock status
+                $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, row) {
+                    const quantity = row.quantity;
+                    const minQuantity = row.min_quantity;
 
-                // Update icon and position
-                if (sidebar.classList.contains('collapsed')) {
-                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
-                    localStorage.setItem('sidebarCollapsed', 'true');
-                } else {
-                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
-                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
-                    localStorage.setItem('sidebarCollapsed', 'false');
-                }
-            });
+                    if (statusFilter === 'low' && quantity <= minQuantity) return true;
+                    if (statusFilter === 'medium' && quantity > minQuantity && quantity <= minQuantity * 2) return true;
+                    if (statusFilter === 'high' && quantity > minQuantity * 2) return true;
 
-            // Handle window resize events
-            window.addEventListener('resize', function () {
-                if (!sidebar.classList.contains('collapsed')) {
-                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                    return false;
+                });
+                inventoryTable.draw();
+                $.fn.dataTable.ext.search.pop(); // Remove the custom filter after use
+            }
+
+            if (locationFilter) {
+                console.log(`Filtering by location: ${locationFilter}`);
+                inventoryTable.column(4).search(locationFilter).draw();
+            }
+
+            if (dateFilter) {
+                console.log(`Filtering by date: ${dateFilter}`);
+                // Date filtering logic would go here
+                const today = new Date();
+                const dateFilters = {
+                    'today': today,
+                    'week': new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+                    'month': new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+                };
+
+                if (dateFilters[dateFilter]) {
+                    const filterDate = dateFilters[dateFilter];
+
+                    $.fn.dataTable.ext.search.push(function (settings, data, dataIndex, row) {
+                        const updatedAt = new Date(row.updated_at);
+                        return updatedAt >= filterDate;
+                    });
+                    inventoryTable.draw();
+                    $.fn.dataTable.ext.search.pop();
                 }
-            });
-        });
+            }
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            console.log("Resetting filters");
+            // Reset form elements
+            document.getElementById('category-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('location-filter').value = '';
+            document.getElementById('date-filter').value = '';
+
+            // Clear all filters and redraw the table
+            inventoryTable.search('').columns().search('').draw();
+        }
+
+        // Save new inventory item
+        async function saveNewItem() {
+            console.log("Saving new item");
+            // Get form values
+            const name = document.getElementById('item-name').value;
+            const sku = document.getElementById('item-sku').value;
+            const categoryId = parseInt(document.getElementById('item-category').value);
+            const quantity = parseInt(document.getElementById('item-quantity').value);
+            const price = parseFloat(document.getElementById('item-price').value);
+            const location = document.getElementById('item-location').value;
+            const minQuantity = parseInt(document.getElementById('item-min-quantity').value);
+            const warehouseId = parseInt(document.getElementById('item-warehouse').value);
+            const description = document.getElementById('item-description').value;
+            const imageUrl = document.getElementById('item-image').value;
+
+            // Validate form
+            if (!name || !sku || !categoryId || isNaN(quantity) || isNaN(price) || !location || isNaN(minQuantity) || !warehouseId) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Show loading overlay
+            dataLoadingOverlay.style.display = 'flex';
+
+            try {
+                // First check if the user is authenticated
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (!session || !session.user) {
+                    throw new Error('You must be logged in to add inventory items. Please sign in again.');
+                }
+
+                console.log("Attempting to insert new inventory item");
+                // Insert new item into Supabase with better error logging
+                const { data, error } = await supabaseClient
+                    .from('inventory_items')
+                    .insert([{
+                        name,
+                        sku,
+                        category_id: categoryId,
+                        quantity,
+                        unit_price: price,
+                        location_in_warehouse: location,
+                        min_quantity: minQuantity,
+                        warehouse_id: warehouseId,
+                        description,
+                        image_url: imageUrl
+                    }])
+                    .select(`
+                        *,
+                        category:category_id(name),
+                        warehouse:warehouse_id(name)
+                    `);
+
+                if (error) {
+                    console.error("Supabase error details:", error);
+
+                    // Check for RLS policy errors
+                    if (error.message && error.message.includes('row-level security policy')) {
+                        throw new Error('Permission denied: This appears to be a database security policy issue. Please contact the administrator with this message: ' + error.message);
+                    }
+
+                    throw error;
+                }
+
+                // Update local data and refresh table
+                if (data && data.length > 0) {
+                    inventoryData.push(data[0]);
+                    filterInventoryByWarehouse();
+                    updateSummaryCards();
+
+                    // Log activity
+                    await logActivity('inventory_add', `Added new item: ${name}`, 'inventory_items', data[0].id);
+
+                    // Reset form and close modal
+                    document.getElementById('add-item-form').reset();
+                    bootstrap.Modal.getInstance(document.getElementById('addItemModal')).hide();
+
+                    // Show success message
+                    alert('Item added successfully!');
+                }
+            } catch (error) {
+                console.error('Error adding item:', error);
+
+                // Display more helpful message
+                let errorMessage = error.message;
+                if (errorMessage.includes('violates row-level security policy')) {
+                    errorMessage = 'Permission denied: You do not have permission to add items to inventory. Please contact the system administrator to update your access rights.';
+                }
+
+                alert('Error adding item: ' + errorMessage);
+
+                // If it's a permissions issue, provide information on how to fix it
+                if (DEBUG_MODE && errorMessage.includes('Permission denied')) {
+                    console.info(`
+                        To fix RLS (Row-Level Security) issues:
+                        1. Run the SQL script in 's:\\soft\\ECS-PROJECT\\SQL\\fix_rls_policies.sql'
+                        2. Ensure your user has the correct permissions
+                        3. Check that you're properly authenticated
+                    `);
+                }
+            } finally {
+                // Hide loading overlay
+                dataLoadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Update existing inventory item
+        async function updateItem() {
+            console.log("Updating item");
+            // Get form values
+            const itemId = parseInt(document.getElementById('edit-item-id').value);
+            const name = document.getElementById('edit-item-name').value;
+            const sku = document.getElementById('edit-item-sku').value;
+            const categoryId = parseInt(document.getElementById('edit-item-category').value);
+            const quantity = parseInt(document.getElementById('edit-item-quantity').value);
+            const price = parseFloat(document.getElementById('edit-item-price').value);
+            const location = document.getElementById('edit-item-location').value;
+            const minQuantity = parseInt(document.getElementById('edit-item-min-quantity').value);
+            const warehouseId = parseInt(document.getElementById('edit-item-warehouse').value);
+            const description = document.getElementById('edit-item-description').value;
+            const imageUrl = document.getElementById('edit-item-image').value;
+
+            // Validate form
+            if (!itemId || !name || !sku || !categoryId || isNaN(quantity) || isNaN(price) || !location || isNaN(minQuantity) || !warehouseId) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            // Show loading overlay
+            dataLoadingOverlay.style.display = 'flex';
+
+            try {
+                // Update item in Supabase
+                const { data, error } = await supabaseClient
+                    .from('inventory_items')
+                    .update({
+                        name,
+                        sku,
+                        category_id: categoryId,
+                        quantity,
+                        unit_price: price,
+                        location_in_warehouse: location,
+                        min_quantity: minQuantity,
+                        warehouse_id: warehouseId,
+                        description,
+                        image_url: imageUrl
+                    })
+                    .eq('id', itemId)
+                    .select(`
+                        *,
+                        category:category_id(name),
+                        warehouse:warehouse_id(name)
+                    `);
+
+                if (error) {
+                    console.error("Supabase error details:", error);
+
+                    // Check for RLS policy errors
+                    if (error.message && error.message.includes('row-level security policy')) {
+                        throw new Error('Permission denied: This appears to be a database security policy issue. Please contact the administrator with this message: ' + error.message);
+                    }
+
+                    throw error;
+                }
+
+                // Update local data and refresh table
+                if (data && data.length > 0) {
+                    const index = inventoryData.findIndex(item => item.id === itemId);
+                    if (index !== -1) {
+                        inventoryData[index] = data[0];
+                    }
+                    filterInventoryByWarehouse();
+                    updateSummaryCards();
+
+                    // Log activity
+                    await logActivity('inventory_update', `Updated item: ${name}`, 'inventory_items', itemId);
+
+                    // Close modal
+                    bootstrap.Modal.getInstance(document.getElementById('editItemModal')).hide();
+
+                    // Show success message
+                    alert('Item updated successfully!');
+                }
+            } catch (error) {
+                console.error('Error updating item:', error);
+
+                // Display more helpful message
+                let errorMessage = error.message;
+                if (errorMessage.includes('violates row-level security policy')) {
+                    errorMessage = 'Permission denied: You do not have permission to update inventory items. Please contact the system administrator.';
+                }
+
+                alert('Error updating item: ' + errorMessage);
+            } finally {
+                // Hide loading overlay
+                dataLoadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Delete inventory item
+        async function deleteItem() {
+            console.log("Deleting item");
+            const itemId = parseInt(document.getElementById('delete-item-id').value);
+            const itemName = document.getElementById('delete-item-name').textContent;
+
+            if (!itemId) {
+                alert('Item ID not found');
+                return;
+            }
+
+            // Show loading overlay
+            dataLoadingOverlay.style.display = 'flex';
+
+            try {
+                // Delete item from Supabase
+                const { error } = await supabaseClient
+                    .from('inventory_items')
+                    .delete()
+                    .eq('id', itemId);
+
+                if (error) {
+                    console.error("Supabase error details:", error);
+
+                    // Check for RLS policy errors
+                    if (error.message && error.message.includes('row-level security policy')) {
+                        throw new Error('Permission denied: This appears to be a database security policy issue. Please contact the administrator with this message: ' + error.message);
+                    }
+
+                    throw error;
+                }
+
+                // Update local data and refresh table
+                const index = inventoryData.findIndex(item => item.id === itemId);
+                if (index !== -1) {
+                    inventoryData.splice(index, 1);
+                }
+                filterInventoryByWarehouse();
+                updateSummaryCards();
+
+                // Log activity
+                await logActivity('inventory_delete', `Deleted item: ${itemName}`, 'inventory_items', itemId);
+
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+
+                // Show success message
+                alert('Item deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting item:', error);
+
+                // Display more helpful message
+                let errorMessage = error.message;
+                if (errorMessage.includes('violates row-level security policy')) {
+                    errorMessage = 'Permission denied: You do not have permission to delete inventory items. Please contact the system administrator.';
+                }
+
+                alert('Error deleting item: ' + errorMessage);
+            } finally {
+                // Hide loading overlay
+                dataLoadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Log activity to activities table
+        async function logActivity(activityType, description, entityType, entityId) {
+            try {
+                console.log(`Logging activity: ${activityType}, ${description}`);
+                const { data: session } = await supabaseClient.auth.getSession();
+                if (!session || !session.user) return;
+
+                await supabaseClient
+                    .from('activities')
+                    .insert([{
+                        warehouse_id: currentWarehouseId,
+                        user_id: session.user.id,
+                        activity_type: activityType,
+                        description: description,
+                        related_entity_type: entityType,
+                        related_entity_id: entityId,
+                        icon: activityType === 'inventory_add' ? 'fa-plus-circle' :
+                            activityType === 'inventory_update' ? 'fa-edit' :
+                                activityType === 'inventory_delete' ? 'fa-trash' : 'fa-box',
+                        importance: activityType === 'inventory_delete' ? 'high' : 'normal'
+                    }]);
+                console.log("Activity logged successfully");
+            } catch (error) {
+                console.error('Error logging activity:', error);
+                // Non-critical, so just log the error
+            }
+        }
     </script>
 </body>
 

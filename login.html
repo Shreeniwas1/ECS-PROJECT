@@ -253,6 +253,17 @@
             const { createClient } = supabase;
             const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
+            // Check if user is already logged in, if so redirect to dashboard
+            checkAuthStatus();
+
+            async function checkAuthStatus() {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user) {
+                    // User is already logged in, redirect to dashboard
+                    window.location.href = 'index.html';
+                }
+            }
+
             // Form toggle functionality
             const authContainer = document.getElementById('auth-container');
             const showRegister = document.getElementById('show-register');
