@@ -446,6 +446,54 @@ canvas {
     }
 }
 
+/* User Account Styles */
+.user-account-container {
+    position: relative;
+}
+
+#userMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all 0.2s;
+}
+
+#userMenuButton:hover {
+    background-color: #e9ecef;
+}
+
+#userMenuButton i {
+    font-size: 1.2rem;
+}
+
+#user-email {
+    font-size: 0.9rem;
+    color: #6c757d;
+    padding: 0.5rem 1rem;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .header-actions {
+        flex-wrap: wrap;
+    }
+    
+    #refresh-all {
+        order: 1;
+        margin-bottom: 10px;
+    }
+    
+    .user-account-container {
+        order: 0;
+        margin-left: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .header-actions {
         margin-top: 10px;
@@ -555,5 +603,13 @@ canvas {
     .table th,
     .table td {
         color: white !important;
+    }
+    
+    #userMenuButton:hover {
+        background-color: #3a3a3a;
+    }
+    
+    #user-email {
+        color: #adb5bd;
     }
 }
