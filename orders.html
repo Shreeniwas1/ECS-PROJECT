@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Warehouse App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 sidebar">
+                <div class="sidebar-header">
+                    <img src="assets/warehouse.png" alt="Logo" class="logo">
+                    <h5>Warehouse App</h5>
+                </div>
+                <hr>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.html">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shipments.html">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="orders.html">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>Climate Control</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="analytics.html">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="staff.html">
+                            <i class="fas fa-users"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                            <span class="badge bg-danger ms-2">3</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a href="#" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Position toggle button outside the container -->
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="col main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Order Management</h2>
+            <div class="header-actions">
+                <div class="dropdown d-inline-block me-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="warehouseSelector"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-warehouse me-1"></i> Warehouse #1
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="warehouseSelector">
+                        <li><a class="dropdown-item active" href="#">Warehouse #1</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #2</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #3</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createOrderModal">
+                    <i class="fas fa-plus me-1"></i> New Order
+                </button>
+            </div>
+        </header>
+
+        <!-- Order Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-clipboard-list"></i>
+                        Open Orders
+                    </h5>
+                    <div class="fs-2 fw-bold">23</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-down text-success me-1"></i>
+                        <span>4.2% from yesterday</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-hourglass-half"></i>
+                        Processing
+                    </h5>
+                    <div class="fs-2 fw-bold">15</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-danger me-1"></i>
+                        <span>2.1% from yesterday</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-truck"></i>
+                        Shipped
+                    </h5>
+                    <div class="fs-2 fw-bold">42</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>8.7% from yesterday</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-check-circle"></i>
+                        Completed
+                    </h5>
+                    <div class="fs-2 fw-bold">357</div>
+                    <div class="text-muted small">
+                        <span>This month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="dashboard-card">
+            <ul class="nav nav-tabs mb-3" id="ordersTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" data-bs-toggle="tab" data-bs-target="#all"
+                        type="button" role="tab">All Orders</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending"
+                        type="button" role="tab">Pending</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipped-tab" data-bs-toggle="tab" data-bs-target="#shipped"
+                        type="button" role="tab">Shipped</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed"
+                        type="button" role="tab">Completed</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="ordersTabsContent">
+                <div class="tab-pane fade show active" id="all" role="tabpanel">
+                    <div class="table-responsive">
+                        <table id="orders-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ORD-5001</td>
+                                    <td>Acme Corporation</td>
+                                    <td>2023-08-29</td>
+                                    <td><span class="badge bg-info">Processing</span></td>
+                                    <td>12 items</td>
+                                    <td>$1,245.99</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ORD-5000</td>
+                                    <td>TechSolutions Inc.</td>
+                                    <td>2023-08-28</td>
+                                    <td><span class="badge bg-warning text-dark">Pending Payment</span></td>
+                                    <td>5 items</td>
+                                    <td>$3,567.50</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ORD-4999</td>
+                                    <td>Global Retail Co.</td>
+                                    <td>2023-08-27</td>
+                                    <td><span class="badge bg-primary">Shipped</span></td>
+                                    <td>32 items</td>
+                                    <td>$4,851.25</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ORD-4998</td>
+                                    <td>Smith & Sons Ltd.</td>
+                                    <td>2023-08-26</td>
+                                    <td><span class="badge bg-success">Completed</span></td>
+                                    <td>8 items</td>
+                                    <td>$958.75</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-warning">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pending" role="tabpanel">
+                    <!-- Similar table for pending orders only -->
+                    <p class="text-muted p-3">Displaying pending orders only...</p>
+                </div>
+                <div class="tab-pane fade" id="shipped" role="tabpanel">
+                    <!-- Similar table for shipped orders only -->
+                    <p class="text-muted p-3">Displaying shipped orders only...</p>
+                </div>
+                <div class="tab-pane fade" id="completed" role="tabpanel">
+                    <!-- Similar table for completed orders only -->
+                    <p class="text-muted p-3">Displaying completed orders only...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Page specific JavaScript -->
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable with consistent styling
+            $('#orders-table').DataTable({
+                responsive: true,
+                order: [[2, 'desc']], // Sort by date
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search orders..."
+                },
+                dom: '<"top"fl>rt<"bottom"ip><"clear">',
+                columnDefs: [
+                    { className: "align-middle", targets: "_all" },
+                    { orderable: false, targets: [6] } // No sorting on action buttons
+                ]
+            });
+
+            // Initialize tabs for order types
+            $('#pending-tab, #shipped-tab, #completed-tab').on('shown.bs.tab', function (e) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            });
+        });
+
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Check for stored preference
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            // Apply stored preference if available
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+            } else {
+                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+            }
+
+            // Toggle sidebar on click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Update icon and position
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+            });
+
+            // Handle window resize events
+            window.addEventListener('resize', function () {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

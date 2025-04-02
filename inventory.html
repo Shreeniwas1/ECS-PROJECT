@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management - Warehouse App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Inventory specific styles -->
+    <style>
+        .inventory-actions .btn {
+            margin-right: 8px;
+        }
+
+        .category-badge {
+            font-size: 0.85rem;
+            padding: 5px 10px;
+        }
+
+        .stock-level {
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .stock-low {
+            background-color: #dc3545;
+        }
+
+        .stock-medium {
+            background-color: #ffc107;
+        }
+
+        .stock-high {
+            background-color: #28a745;
+        }
+
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 15px;
+        }
+
+        .inventory-filters {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .barcode-scanner {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            background-color: #f8f9fa;
+        }
+
+        /* Remove conflicting sidebar styles */
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 sidebar">
+                <div class="sidebar-header">
+                    <img src="assets/warehouse.png" alt="Logo" class="logo">
+                    <h5>Warehouse App</h5>
+                </div>
+                <hr>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="inventory.html">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shipments.html">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="orders.html">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>Climate Control</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="analytics.html">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="staff.html">
+                            <i class="fas fa-users"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                            <span class="badge bg-danger ms-2">3</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a href="#" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Move the toggle button outside the container to ensure it's always accessible -->
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="col main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Inventory Management</h2>
+            <div class="header-actions">
+                <div class="dropdown d-inline-block me-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="warehouseSelector"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-warehouse me-1"></i> Warehouse #1
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="warehouseSelector">
+                        <li><a class="dropdown-item active" href="#">Warehouse #1</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #2</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #3</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
+                    <i class="fas fa-plus me-1"></i> Add Item
+                </button>
+            </div>
+        </header>
+
+        <!-- Inventory Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-cubes"></i>
+                        Total Items
+                    </h5>
+                    <div class="fs-2 fw-bold">1,284</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>5.3% from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Low Stock
+                    </h5>
+                    <div class="fs-2 fw-bold text-danger">24</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-down text-success me-1"></i>
+                        <span>2.1% from last week</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-dolly-flatbed"></i>
+                        Total Value
+                    </h5>
+                    <div class="fs-2 fw-bold">$247,580</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>8.7% from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        Turnover Rate
+                    </h5>
+                    <div class="fs-2 fw-bold">4.2x</div>
+                    <div class="text-muted small">
+                        <span>Monthly average</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barcode Scanner Section -->
+        <div class="barcode-scanner">
+            <div class="row">
+                <div class="col-md-6 mx-auto">
+                    <i class="fas fa-barcode fa-3x mb-3 text-primary"></i>
+                    <h5>Quick Scan</h5>
+                    <p class="text-muted">Scan item barcode to quickly look up or update inventory</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Scan or enter barcode" id="barcode-input">
+                        <button class="btn btn-primary" type="button" id="scan-button">
+                            <i class="fas fa-camera me-1"></i> Scan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Filters -->
+        <div class="inventory-filters">
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label for="category-filter" class="form-label">Category</label>
+                    <select class="form-select" id="category-filter">
+                        <option value="">All Categories</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Food">Food</option>
+                        <option value="Furniture">Furniture</option>
+                        <option value="Office">Office Supplies</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="status-filter" class="form-label">Stock Status</label>
+                    <select class="form-select" id="status-filter">
+                        <option value="">All Status</option>
+                        <option value="low">Low Stock</option>
+                        <option value="medium">Medium Stock</option>
+                        <option value="high">High Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="location-filter" class="form-label">Location</label>
+                    <select class="form-select" id="location-filter">
+                        <option value="">All Locations</option>
+                        <option value="A">Section A</option>
+                        <option value="B">Section B</option>
+                        <option value="C">Section C</option>
+                        <option value="D">Section D</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label for="date-filter" class="form-label">Last Updated</label>
+                    <select class="form-select" id="date-filter">
+                        <option value="">Any time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <button class="btn btn-primary" id="apply-filters">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" id="reset-filters">
+                        <i class="fas fa-undo me-1"></i> Reset
+                    </button>
+                    <div class="float-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-secondary" id="view-grid">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary active" id="view-list">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Table -->
+        <div class="dashboard-card">
+            <div class="table-responsive">
+                <table id="inventory-table" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Item</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Location</th>
+                            <th>Unit Price</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>INV-1001</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
+                                        alt="Product">
+                                    <div>
+                                        <div class="fw-bold">Wireless Keyboard</div>
+                                        <div class="text-muted small">SKU: KB-2022-BLK</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-info category-badge">Electronics</span></td>
+                            <td>
+                                <span class="stock-level stock-high"></span> 85
+                            </td>
+                            <td>Section A, Shelf 3</td>
+                            <td>$45.99</td>
+                            <td>2023-08-15</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>INV-1002</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
+                                        alt="Product">
+                                    <div>
+                                        <div class="fw-bold">Bluetooth Speaker</div>
+                                        <div class="text-muted small">SKU: SP-103-RED</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-info category-badge">Electronics</span></td>
+                            <td>
+                                <span class="stock-level stock-medium"></span> 32
+                            </td>
+                            <td>Section B, Shelf 1</td>
+                            <td>$89.99</td>
+                            <td>2023-08-17</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>INV-1003</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
+                                        alt="Product">
+                                    <div>
+                                        <div class="fw-bold">Office Chair</div>
+                                        <div class="text-muted small">SKU: OC-420-GRY</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-secondary category-badge">Furniture</span></td>
+                            <td>
+                                <span class="stock-level stock-low"></span> 7
+                            </td>
+                            <td>Section D, Area 5</td>
+                            <td>$199.99</td>
+                            <td>2023-08-10</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>INV-1004</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="https://via.placeholder.com/40" class="me-2 inventory-product-img"
+                                        alt="Product">
+                                    <div>
+                                        <div class="fw-bold">Notebook Set</div>
+                                        <div class="text-muted small">SKU: NB-310-WHT</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-warning text-dark category-badge">Office Supplies</span>
+                            </td>
+                            <td>
+                                <span class="stock-level stock-high"></span> 120
+                            </td>
+                            <td>Section A, Shelf 7</td>
+                            <td>$12.99</td>
+                            <td>2023-08-19</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>INV-1005</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="assets/warehouse.png" class="me-2 inventory-product-img" alt="Product">
+                                    <div>
+                                        <div class="fw-bold">Desk Lamp</div>
+                                        <div class="text-muted small">SKU: LMP-205-SLV</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-warning text-dark category-badge">Office Supplies</span>
+                            </td>
+                            <td>
+                                <span class="stock-level stock-low"></span> 8
+                            </td>
+                            <td>Section C, Shelf 2</td>
+                            <td>$35.49</td>
+                            <td>2023-08-14</td>
+                            <td>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#editItemModal">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div class="modal fade" id="addItemModal" tabindex="-1" aria-labelledby="addItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addItemModalLabel">Add New Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-item-form">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item-name" class="form-label">Item Name</label>
+                                <input type="text" class="form-control" id="item-name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="item-sku" class="form-label">SKU</label>
+                                <input type="text" class="form-control" id="item-sku" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item-category" class="form-label">Category</label>
+                                <select class="form-select" id="item-category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Electronics">Electronics</option>
+                                    <option value="Clothing">Clothing</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Office">Office Supplies</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="item-quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control" id="item-quantity" min="0" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item-price" class="form-label">Unit Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="item-price" step="0.01" min="0"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="item-location" class="form-label">Storage Location</label>
+                                <input type="text" class="form-control" id="item-location" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="item-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="item-description" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="item-image" class="form-label">Product Image</label>
+                            <input class="form-control" type="file" id="item-image">
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="item-supplier" class="form-label">Supplier</label>
+                                <input type="text" class="form-control" id="item-supplier">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="item-reorder" class="form-label">Reorder Point</label>
+                                <input type="number" class="form-control" id="item-reorder" min="0">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="save-new-item">Add Item</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Item Modal -->
+    <div class="modal fade" id="editItemModal" tabindex="-1" aria-labelledby="editItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editItemModalLabel">Edit Inventory Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Same form as add item but pre-filled with data -->
+                    <form id="edit-item-form">
+                        <!-- Same fields as add-item-form but with pre-filled data -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="update-item">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Inventory specific JavaScript -->
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable
+            $('#inventory-table').DataTable({
+                responsive: true,
+                order: [[0, 'desc']],
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search inventory..."
+                }
+            });
+
+            // Apply filters button
+            $('#apply-filters').click(function () {
+                // In a real app, this would filter the data
+                // For demo, just show a message
+                alert('Filters applied! In a real application, this would filter the data according to your selections.');
+            });
+
+            // Reset filters button
+            $('#reset-filters').click(function () {
+                // Reset all filter dropdowns
+                $('#category-filter, #status-filter, #location-filter, #date-filter').val('');
+
+                // In a real app, this would reset the table data
+                alert('Filters reset! In a real application, this would reload all inventory data.');
+            });
+
+            // View toggle buttons
+            $('#view-grid, #view-list').click(function () {
+                $('#view-grid, #view-list').removeClass('active');
+                $(this).addClass('active');
+
+                if ($(this).attr('id') === 'view-grid') {
+                    // In a real app, switch to grid view
+                    alert('Grid view would be displayed here.');
+                }
+            });
+
+            // Barcode scanner button
+            $('#scan-button').click(function () {
+                // In a real app, this would activate the camera for scanning
+                alert('In a real application, this would activate the device camera to scan a barcode.');
+            });
+
+            // Save new item button
+            $('#save-new-item').click(function () {
+                // Validate the form
+                if (!$('#add-item-form')[0].checkValidity()) {
+                    // Trigger form validation
+                    $('<input type="submit">').hide().appendTo('#add-item-form').click().remove();
+                    return;
+                }
+
+                // In a real app, this would save the new item to the database
+                alert('New item added successfully!');
+
+                // Close the modal
+                $('#addItemModal').modal('hide');
+
+                // Reset the form
+                $('#add-item-form')[0].reset();
+            });
+
+            // Load edit modal with pre-filled data
+            $('#editItemModal').on('show.bs.modal', function (event) {
+                // In a real app, you would load the actual data for the selected item
+                // For demo, we'll just show a placeholder form
+                $('#edit-item-form').html($('#add-item-form').html());
+
+                // Pre-fill with sample data
+                $('#edit-item-form #item-name').val('Wireless Keyboard');
+                $('#edit-item-form #item-sku').val('KB-2022-BLK');
+                $('#edit-item-form #item-category').val('Electronics');
+                $('#edit-item-form #item-quantity').val('85');
+                $('#edit-item-form #item-price').val('45.99');
+                $('#edit-item-form #item-location').val('Section A, Shelf 3');
+                $('#edit-item-form #item-reorder').val('15');
+            });
+        });
+
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Check for stored preference
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            // Apply stored preference if available
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+            } else {
+                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+            }
+
+            // Toggle sidebar on click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Update icon and position
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+            });
+
+            // Handle window resize events
+            window.addEventListener('resize', function () {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

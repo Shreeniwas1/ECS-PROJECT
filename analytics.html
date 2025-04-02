@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Warehouse App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 sidebar">
+                <div class="sidebar-header">
+                    <img src="assets/warehouse.png" alt="Logo" class="logo">
+                    <h5>Warehouse App</h5>
+                </div>
+                <hr>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.html">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shipments.html">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="orders.html">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>Climate Control</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="analytics.html">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="staff.html">
+                            <i class="fas fa-users"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                            <span class="badge bg-danger ms-2">3</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a href="#" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Position toggle button outside the container -->
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="col main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Analytics Dashboard</h2>
+            <div class="header-actions">
+                <div class="btn-group me-2">
+                    <button type="button" class="btn btn-outline-secondary active">Daily</button>
+                    <button type="button" class="btn btn-outline-secondary">Weekly</button>
+                    <button type="button" class="btn btn-outline-secondary">Monthly</button>
+                    <button type="button" class="btn btn-outline-secondary">Yearly</button>
+                </div>
+                <button class="btn btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Export
+                </button>
+            </div>
+        </header>
+
+        <!-- Key Performance Indicators -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-dollar-sign"></i>
+                        Revenue
+                    </h5>
+                    <div class="fs-2 fw-bold">$84,245</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>7.3% from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-box"></i>
+                        Units Shipped
+                    </h5>
+                    <div class="fs-2 fw-bold">1,872</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>5.1% from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        Inventory Turnover
+                    </h5>
+                    <div class="fs-2 fw-bold">4.2x</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-down text-danger me-1"></i>
+                        <span>0.3x from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-dolly"></i>
+                        Order Fulfillment
+                    </h5>
+                    <div class="fs-2 fw-bold">97.5%</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>1.2% from last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="dashboard-card h-100">
+                    <h5 class="card-title">Revenue Trends</h5>
+                    <div style="height: 300px;">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dashboard-card h-100">
+                    <h5 class="card-title">Top Products</h5>
+                    <div style="height: 300px;">
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order and Warehouse Performance -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="dashboard-card h-100">
+                    <h5 class="card-title">Order Status</h5>
+                    <div style="height: 250px;">
+                        <canvas id="orderStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="dashboard-card h-100">
+                    <h5 class="card-title">Warehouse Utilization</h5>
+                    <div style="height: 250px;">
+                        <canvas id="warehouseUtilizationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics Table -->
+        <div class="dashboard-card">
+            <h5 class="card-title">Key Performance Metrics</h5>
+            <div class="table-responsive">
+                <table id="metrics-table" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Current</th>
+                            <th>Previous</th>
+                            <th>Change</th>
+                            <th>Target</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Order Accuracy</td>
+                            <td>98.2%</td>
+                            <td>97.8%</td>
+                            <td class="text-success">+0.4%</td>
+                            <td>99%</td>
+                            <td><span class="badge bg-warning">Near Target</span></td>
+                        </tr>
+                        <tr>
+                            <td>Inventory Accuracy</td>
+                            <td>99.1%</td>
+                            <td>98.7%</td>
+                            <td class="text-success">+0.4%</td>
+                            <td>99%</td>
+                            <td><span class="badge bg-success">On Target</span></td>
+                        </tr>
+                        <tr>
+                            <td>Order Fulfillment Time</td>
+                            <td>1.8 days</td>
+                            <td>2.1 days</td>
+                            <td class="text-success">-0.3 days</td>
+                            <td>2 days</td>
+                            <td><span class="badge bg-success">On Target</span></td>
+                        </tr>
+                        <tr>
+                            <td>Shipping Cost per Order</td>
+                            <td>$12.45</td>
+                            <td>$11.30</td>
+                            <td class="text-danger">+$1.15</td>
+                            <td>$12.00</td>
+                            <td><span class="badge bg-danger">Off Target</span></td>
+                        </tr>
+                        <tr>
+                            <td>Customer Return Rate</td>
+                            <td>2.3%</td>
+                            <td>2.5%</td>
+                            <td class="text-success">-0.2%</td>
+                            <td>2.0%</td>
+                            <td><span class="badge bg-warning">Near Target</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+
+    <!-- Page specific JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize charts
+            initializeCharts();
+
+            // Initialize DataTable for metrics
+            $(document).ready(function () {
+                $('#metrics-table').DataTable({
+                    responsive: true,
+                    paging: false,
+                    searching: false,
+                    info: false,
+                    columnDefs: [
+                        { className: "align-middle", targets: "_all" }
+                    ]
+                });
+            });
+
+            // Setup sidebar toggle
+            initializeSidebar();
+        });
+
+        function initializeCharts() {
+            // Revenue trends chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [65000, 59000, 80000, 81000, 76000, 85000, 90000, 84000],
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function (value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Top products chart
+            const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
+            new Chart(topProductsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Furniture', 'Clothing', 'Office Supplies', 'Other'],
+                    datasets: [{
+                        data: [35, 25, 20, 15, 5],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // Order status chart
+            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
+            new Chart(orderStatusCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Pending', 'Processing', 'Shipped', 'Delivered', 'Returned'],
+                    datasets: [{
+                        label: 'Orders',
+                        data: [23, 15, 42, 357, 8],
+                        backgroundColor: [
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(255, 99, 132, 0.7)',
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Warehouse utilization chart
+            const warehouseUtilizationCtx = document.getElementById('warehouseUtilizationChart').getContext('2d');
+            new Chart(warehouseUtilizationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Warehouse 1', 'Warehouse 2', 'Warehouse 3'],
+                    datasets: [{
+                        label: 'Utilization',
+                        data: [65, 78, 45],
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                    },
+                    {
+                        label: 'Target Capacity',
+                        data: [80, 80, 80],
+                        type: 'line',
+                        borderColor: 'rgba(255, 99, 132, 0.7)',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function (value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initializeSidebar() {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Check for stored preference
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            // Apply stored preference if available
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+            } else {
+                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+            }
+
+            // Toggle sidebar on click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Update icon and position
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+            });
+
+            // Handle window resize events
+            window.addEventListener('resize', function () {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

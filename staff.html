@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Management - Warehouse App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 sidebar">
+                <div class="sidebar-header">
+                    <img src="assets/warehouse.png" alt="Logo" class="logo">
+                    <h5>Warehouse App</h5>
+                </div>
+                <hr>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.html">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="shipments.html">
+                            <i class="fas fa-truck-loading"></i>
+                            <span>Shipments</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="orders.html">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Orders</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-thermometer-half"></i>
+                            <span>Climate Control</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="analytics.html">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="staff.html">
+                            <i class="fas fa-users"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            <i class="fas fa-bell"></i>
+                            <span>Notifications</span>
+                            <span class="badge bg-danger ms-2">3</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a href="#" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Position toggle button outside the container -->
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="col main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Staff Management</h2>
+            <div class="header-actions">
+                <div class="dropdown d-inline-block me-2">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="warehouseSelector"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-warehouse me-1"></i> Warehouse #1
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="warehouseSelector">
+                        <li><a class="dropdown-item active" href="#">Warehouse #1</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #2</a></li>
+                        <li><a class="dropdown-item" href="#">Warehouse #3</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                    <i class="fas fa-user-plus me-1"></i> Add Employee
+                </button>
+            </div>
+        </header>
+
+        <!-- Staff Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-users"></i>
+                        Total Staff
+                    </h5>
+                    <div class="fs-2 fw-bold">42</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>2 new this month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-user-clock"></i>
+                        On Duty
+                    </h5>
+                    <div class="fs-2 fw-bold">12</div>
+                    <div class="text-muted small">
+                        <span>Current shift</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-calendar-check"></i>
+                        Attendance
+                    </h5>
+                    <div class="fs-2 fw-bold">96.5%</div>
+                    <div class="text-muted small">
+                        <i class="fas fa-arrow-up text-success me-1"></i>
+                        <span>2.1% from last month</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="dashboard-card">
+                    <h5 class="card-title">
+                        <i class="fas fa-briefcase"></i>
+                        Open Positions
+                    </h5>
+                    <div class="fs-2 fw-bold">3</div>
+                    <div class="text-muted small">
+                        <a href="#" class="text-primary">View details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Staff Directory -->
+        <div class="dashboard-card">
+            <ul class="nav nav-tabs mb-3" id="staffTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-staff-tab" data-bs-toggle="tab" data-bs-target="#all-staff"
+                        type="button" role="tab">All Staff</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="management-tab" data-bs-toggle="tab" data-bs-target="#management"
+                        type="button" role="tab">Management</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="operations-tab" data-bs-toggle="tab" data-bs-target="#operations"
+                        type="button" role="tab">Operations</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="shipping-tab" data-bs-toggle="tab" data-bs-target="#shipping"
+                        type="button" role="tab">Shipping</button>
+                </li>
+            </ul>
+            <div class="tab-content" id="staffTabsContent">
+                <div class="tab-pane fade show active" id="all-staff" role="tabpanel">
+                    <div class="table-responsive">
+                        <table id="staff-table" class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Employee ID</th>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Department</th>
+                                    <th>Status</th>
+                                    <th>Contact</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EMP-1001</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://via.placeholder.com/40" class="me-2 rounded-circle"
+                                                alt="Employee">
+                                            <div>
+                                                <div class="fw-bold">John Smith</div>
+                                                <div class="text-muted small">Since Jan 2020</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Warehouse Manager</td>
+                                    <td>Management</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>john.smith@example.com</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EMP-1002</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://via.placeholder.com/40" class="me-2 rounded-circle"
+                                                alt="Employee">
+                                            <div>
+                                                <div class="fw-bold">Sarah Johnson</div>
+                                                <div class="text-muted small">Since Mar 2021</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Inventory Specialist</td>
+                                    <td>Operations</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>sarah.j@example.com</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EMP-1003</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://via.placeholder.com/40" class="me-2 rounded-circle"
+                                                alt="Employee">
+                                            <div>
+                                                <div class="fw-bold">Michael Chen</div>
+                                                <div class="text-muted small">Since Jun 2019</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Shipping Coordinator</td>
+                                    <td>Shipping</td>
+                                    <td><span class="badge bg-warning text-dark">On Leave</span></td>
+                                    <td>m.chen@example.com</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EMP-1004</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://via.placeholder.com/40" class="me-2 rounded-circle"
+                                                alt="Employee">
+                                            <div>
+                                                <div class="fw-bold">Jessica Brown</div>
+                                                <div class="text-muted small">Since Feb 2022</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Warehouse Associate</td>
+                                    <td>Operations</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>j.brown@example.com</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>EMP-1005</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="https://via.placeholder.com/40" class="me-2 rounded-circle"
+                                                alt="Employee">
+                                            <div>
+                                                <div class="fw-bold">Robert Wilson</div>
+                                                <div class="text-muted small">Since Sep 2020</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Shift Supervisor</td>
+                                    <td>Management</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                    <td>r.wilson@example.com</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="management" role="tabpanel">
+                    <!-- Similar table for management staff only -->
+                    <p class="text-muted p-3">Displaying management staff only...</p>
+                </div>
+                <div class="tab-pane fade" id="operations" role="tabpanel">
+                    <!-- Similar table for operations staff only -->
+                    <p class="text-muted p-3">Displaying operations staff only...</p>
+                </div>
+                <div class="tab-pane fade" id="shipping" role="tabpanel">
+                    <!-- Similar table for shipping staff only -->
+                    <p class="text-muted p-3">Displaying shipping staff only...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shift Schedule -->
+        <div class="dashboard-card mt-4">
+            <h5 class="card-title">
+                <i class="fas fa-calendar-alt"></i>
+                Weekly Shift Schedule
+            </h5>
+            <div class="table-responsive">
+                <table id="schedule-table" class="table table-bordered table-hover">
+                    <thead>
+                        <tr class="bg-light">
+                            <th width="16%">Time</th>
+                            <th width="12%">Monday</th>
+                            <th width="12%">Tuesday</th>
+                            <th width="12%">Wednesday</th>
+                            <th width="12%">Thursday</th>
+                            <th width="12%">Friday</th>
+                            <th width="12%">Saturday</th>
+                            <th width="12%">Sunday</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Morning<br><small class="text-muted">8:00 - 16:00</small></td>
+                            <td>8 staff</td>
+                            <td>8 staff</td>
+                            <td>7 staff</td>
+                            <td>8 staff</td>
+                            <td>8 staff</td>
+                            <td>4 staff</td>
+                            <td>2 staff</td>
+                        </tr>
+                        <tr>
+                            <td>Evening<br><small class="text-muted">16:00 - 00:00</small></td>
+                            <td>6 staff</td>
+                            <td>6 staff</td>
+                            <td>6 staff</td>
+                            <td>6 staff</td>
+                            <td>5 staff</td>
+                            <td>3 staff</td>
+                            <td>0 staff</td>
+                        </tr>
+                        <tr>
+                            <td>Night<br><small class="text-muted">00:00 - 8:00</small></td>
+                            <td>2 staff</td>
+                            <td>2 staff</td>
+                            <td>2 staff</td>
+                            <td>2 staff</td>
+                            <td>2 staff</td>
+                            <td>1 staff</td>
+                            <td>0 staff</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end mt-3">
+                <button class="btn btn-primary">
+                    <i class="fas fa-calendar-alt me-1"></i> Schedule Management
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEmployeeModalLabel">Add New Employee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-employee-form">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee-firstname" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="employee-firstname" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee-lastname" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="employee-lastname" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="employee-email" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee-phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="employee-phone" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee-position" class="form-label">Position</label>
+                                <select class="form-select" id="employee-position" required>
+                                    <option value="">Select Position</option>
+                                    <option value="Warehouse Manager">Warehouse Manager</option>
+                                    <option value="Shift Supervisor">Shift Supervisor</option>
+                                    <option value="Inventory Specialist">Inventory Specialist</option>
+                                    <option value="Shipping Coordinator">Shipping Coordinator</option>
+                                    <option value="Warehouse Associate">Warehouse Associate</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee-department" class="form-label">Department</label>
+                                <select class="form-select" id="employee-department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Management">Management</option>
+                                    <option value="Operations">Operations</option>
+                                    <option value="Shipping">Shipping</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="employee-startdate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="employee-startdate" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee-status" class="form-label">Status</label>
+                                <select class="form-select" id="employee-status" required>
+                                    <option value="Active">Active</option>
+                                    <option value="On Leave">On Leave</option>
+                                    <option value="Inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="employee-photo" class="form-label">Employee Photo</label>
+                            <input class="form-control" type="file" id="employee-photo">
+                        </div>
+                        <div class="mb-3">
+                            <label for="employee-notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="employee-notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="save-employee">Add Employee</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- Page specific JavaScript -->
+    <script>
+        $(document).ready(function () {
+            // Initialize DataTable with consistent styling
+            $('#staff-table').DataTable({
+                responsive: true,
+                order: [[0, 'asc']], // Sort by employee ID
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search staff..."
+                },
+                dom: '<"top"fl>rt<"bottom"ip><"clear">',
+                columnDefs: [
+                    { className: "align-middle", targets: "_all" },
+                    { orderable: false, targets: [6] } // No sorting on action buttons
+                ]
+            });
+
+            // Make schedule table consistent but without DataTables functionality
+            $('#schedule-table').addClass('table-striped');
+
+            // Initialize tabs for staff categories
+            $('#management-tab, #operations-tab, #shipping-tab').on('shown.bs.tab', function (e) {
+                $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+            });
+
+            // Handle save employee button
+            $('#save-employee').click(function () {
+                // Validate the form
+                if (!$('#add-employee-form')[0].checkValidity()) {
+                    // Trigger form validation
+                    $('<input type="submit">').hide().appendTo('#add-employee-form').click().remove();
+                    return;
+                }
+
+                // In a real app, this would save the new employee to the database
+                alert('New employee added successfully!');
+
+                // Close the modal
+                $('#addEmployeeModal').modal('hide');
+
+                // Reset the form
+                $('#add-employee-form')[0].reset();
+            });
+        });
+
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            // Check for stored preference
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            // Apply stored preference if available
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+            } else {
+                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+            }
+
+            // Toggle sidebar on click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Update icon and position
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+            });
+
+            // Handle window resize events
+            window.addEventListener('resize', function () {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
