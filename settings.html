@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Warehouse Management Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Add loading overlay styles */
+        #auth-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner-container {
+            margin-bottom: 20px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            #auth-loading-overlay {
+                background-color: rgba(26, 26, 26, 0.9);
+            }
+        }
+
+        .settings-card {
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar-container {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #ddd;
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            background: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .section-header {
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Auth loading overlay -->
+    <div id="auth-loading-overlay">
+        <div class="spinner-container">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+        <h4>Checking authentication...</h4>
+    </div>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
+            <!-- Sidebar -->
+            <div class="col-auto col-md-3 col-xl-2 sidebar">
+                <div class="sidebar-header">
+                    <img src="assets/warehouse.png" alt="Logo" class="logo">
+                    <h5>Warehouse App</h5>
+                </div>
+                <hr>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.html">
+                            <i class="fas fa-boxes"></i>
+                            <span>Inventory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="settings.html">
+                            <i class="fas fa-cog"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="staff.html">
+                            <i class="fas fa-users"></i>
+                            <span>Staff</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="sidebar-footer">
+                    <a href="#" class="btn btn-sm btn-outline-light">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Position toggle button outside the container -->
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+        <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <div class="col main-content">
+        <header class="d-flex justify-content-between align-items-center mb-4">
+            <h2>User Settings</h2>
+            <div class="header-actions d-flex align-items-center">
+                <!-- User Account Button -->
+                <div class="user-account-container">
+                    <!-- Sign In Button (shown when not authenticated) -->
+                    <a href="login.html" id="sign-in-button" class="btn btn-outline-primary d-none">
+                        <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                    </a>
+
+                    <!-- Account Circle (shown when authenticated) -->
+                    <div class="dropdown d-none" id="user-dropdown">
+                        <button class="btn btn-outline-secondary rounded-circle p-2" type="button" id="userMenuButton"
+                            data-bs-toggle="dropdown" aria-expanded="false" title="User Account">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li class="dropdown-item-text" id="user-email">user@example.com</li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="profile.html"><i
+                                        class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="sign-out-button"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="dashboard-card settings-card">
+                    <div class="avatar-container">
+                        <img src="assets/default-avatar.png" alt="User Avatar" class="avatar-image" id="user-avatar">
+                        <label for="avatar-upload" class="avatar-upload">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="avatar-upload" accept="image/*" hidden>
+                    </div>
+                    <h4 class="text-center mb-3" id="profile-name">User Name</h4>
+                    <p class="text-muted text-center" id="profile-email">user@example.com</p>
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-primary" id="save-all-settings">
+                            <i class="fas fa-save me-2"></i>Save All Changes
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-card settings-card">
+                    <h5 class="card-title">Settings Menu</h5>
+                    <div class="list-group">
+                        <a href="#profile-section" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-user me-2"></i>Profile Information
+                        </a>
+                        <a href="#password-section" class="list-group-item list-group-item-action">
+                            <i class="fas fa-key me-2"></i>Change Password
+                        </a>
+                        <a href="#notifications-section" class="list-group-item list-group-item-action">
+                            <i class="fas fa-bell me-2"></i>Notification Settings
+                        </a>
+                        <a href="#appearance-section" class="list-group-item list-group-item-action">
+                            <i class="fas fa-paint-brush me-2"></i>Appearance
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <!-- Profile Information -->
+                <div class="dashboard-card settings-card" id="profile-section">
+                    <h5 class="section-header">
+                        <i class="fas fa-user me-2"></i>Profile Information
+                    </h5>
+                    <form id="profile-form">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first-name" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="first-name" placeholder="Enter first name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last-name" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="last-name" placeholder="Enter last name">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" placeholder="Enter email" readonly>
+                            <div class="form-text">Email address cannot be changed. Contact administrator if needed.
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="job-title" class="form-label">Job Title</label>
+                            <input type="text" class="form-control" id="job-title" placeholder="Enter job title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" placeholder="Enter phone number">
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Change Password -->
+                <div class="dashboard-card settings-card" id="password-section">
+                    <h5 class="section-header">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </h5>
+                    <form id="password-form">
+                        <div class="mb-3">
+                            <label for="current-password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current-password"
+                                placeholder="Enter current password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new-password"
+                                placeholder="Enter new password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm-password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm-password"
+                                placeholder="Confirm new password">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-text">
+                                <p>Password must contain:</p>
+                                <ul>
+                                    <li>At least 8 characters</li>
+                                    <li>At least one uppercase letter</li>
+                                    <li>At least one number</li>
+                                    <li>At least one special character</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Update Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="dashboard-card settings-card" id="notifications-section">
+                    <h5 class="section-header">
+                        <i class="fas fa-bell me-2"></i>Notification Settings
+                    </h5>
+                    <form id="notifications-form">
+                        <div class="mb-3">
+                            <h6>Email Notifications</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notify-inventory" checked>
+                                <label class="form-check-label" for="notify-inventory">
+                                    Inventory Updates
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notify-shipments" checked>
+                                <label class="form-check-label" for="notify-shipments">
+                                    Shipment Status Changes
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notify-alerts" checked>
+                                <label class="form-check-label" for="notify-alerts">
+                                    System Alerts
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="notify-reports">
+                                <label class="form-check-label" for="notify-reports">
+                                    Weekly Reports
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6>In-App Notifications</h6>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="app-notify-inventory" checked>
+                                <label class="form-check-label" for="app-notify-inventory">
+                                    Inventory Updates
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="app-notify-shipments" checked>
+                                <label class="form-check-label" for="app-notify-shipments">
+                                    Shipment Status Changes
+                                </label>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="app-notify-alerts" checked>
+                                <label class="form-check-label" for="app-notify-alerts">
+                                    System Alerts
+                                </label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Notification Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Appearance Settings -->
+                <div class="dashboard-card settings-card" id="appearance-section">
+                    <h5 class="section-header">
+                        <i class="fas fa-paint-brush me-2"></i>Appearance
+                    </h5>
+                    <form id="appearance-form">
+                        <div class="mb-3">
+                            <label class="form-label">Theme</label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="theme-light"
+                                        value="light" checked>
+                                    <label class="form-check-label" for="theme-light">
+                                        Light
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="theme-dark"
+                                        value="dark">
+                                    <label class="form-check-label" for="theme-dark">
+                                        Dark
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="theme" id="theme-system"
+                                        value="system">
+                                    <label class="form-check-label" for="theme-system">
+                                        Use System Setting
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="font-size" class="form-label">Font Size</label>
+                            <select class="form-select" id="font-size">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Appearance Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="script.js"></script>
+    <script>
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const mainContent = document.querySelector('.main-content');
+            const authLoadingOverlay = document.getElementById('auth-loading-overlay');
+
+            // Check for stored preference
+            const sidebarCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            // Apply stored preference if available
+            if (sidebarCollapsed) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+                sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+            } else {
+                sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+            }
+
+            // Toggle sidebar on click
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('expanded');
+
+                // Update icon and position
+                if (sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                    sidebarToggle.style.left = '0'; // Position at left edge when collapsed
+                    localStorage.setItem('sidebarCollapsed', 'true');
+                } else {
+                    sidebarToggle.innerHTML = '<i class="fas fa-chevron-left"></i>';
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px'; // Position at sidebar edge
+                    localStorage.setItem('sidebarCollapsed', 'false');
+                }
+            });
+
+            // Handle window resize events
+            window.addEventListener('resize', function () {
+                if (!sidebar.classList.contains('collapsed')) {
+                    sidebarToggle.style.left = sidebar.offsetWidth + 'px';
+                }
+            });
+
+            // Initialize Supabase client
+            const supabaseUrl = 'https://cgqmkyalozpmhlamywdh.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNncW1reWFsb3pwbWhsYW15d2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2MDg3MjYsImV4cCI6MjA1OTE4NDcyNn0.7lYoVojPXBiCdMEvsg2n7YrmT3iEPsCqXYjvaEHO-Jw';
+            const { createClient } = supabase;
+            const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+            // Authentication state elements
+            const signInButton = document.getElementById('sign-in-button');
+            const userDropdown = document.getElementById('user-dropdown');
+            const userEmail = document.getElementById('user-email');
+            const profileEmail = document.getElementById('profile-email');
+            const emailInput = document.getElementById('email');
+            const profileName = document.getElementById('profile-name');
+            const signOutButton = document.getElementById('sign-out-button');
+            const sidebarLogoutBtn = document.querySelector('.sidebar-footer .btn');
+
+            // Settings form elements
+            const profileForm = document.getElementById('profile-form');
+            const passwordForm = document.getElementById('password-form');
+            const notificationsForm = document.getElementById('notifications-form');
+            const appearanceForm = document.getElementById('appearance-form');
+            const saveAllButton = document.getElementById('save-all-settings');
+            const avatarUpload = document.getElementById('avatar-upload');
+            const userAvatar = document.getElementById('user-avatar');
+
+            // Check authentication status
+            checkAuthStatus();
+
+            // Auth state change listener
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                checkAuthStatus();
+            });
+
+            // Function to check auth status
+            async function checkAuthStatus() {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+                if (session && session.user) {
+                    // User is signed in
+                    signInButton.classList.add('d-none');
+                    userDropdown.classList.remove('d-none');
+
+                    // Display user email in dropdown and profile
+                    userEmail.textContent = session.user.email;
+                    profileEmail.textContent = session.user.email;
+                    emailInput.value = session.user.email;
+
+                    // Set profile name (could be improved with actual user data)
+                    profileName.textContent = session.user.email.split('@')[0];
+
+                    // Update logout button in sidebar
+                    if (sidebarLogoutBtn) {
+                        sidebarLogoutBtn.setAttribute('data-auth', 'true');
+                    }
+
+                    // Load user profile data
+                    loadUserProfile(session.user.id);
+
+                    // Hide loading overlay
+                    authLoadingOverlay.style.display = 'none';
+                } else {
+                    // User is not signed in - redirect to login page
+                    console.log('No authenticated session found, redirecting to login...');
+                    window.location.href = 'login.html';
+                }
+            }
+
+            // Load user profile data
+            async function loadUserProfile(userId) {
+                try {
+                    // This is where you would fetch the user's profile data from Supabase
+                    // For this example, I'm just showing placeholder functionality
+
+                    // Placeholder for profile data fetching
+                    // const { data, error } = await supabaseClient
+                    //     .from('profiles')
+                    //     .select('*')
+                    //     .eq('id', userId)
+                    //     .single();
+
+                    // if (error) throw error;
+
+                    // if (data) {
+                    //     document.getElementById('first-name').value = data.first_name || '';
+                    //     document.getElementById('last-name').value = data.last_name || '';
+                    //     document.getElementById('job-title').value = data.job_title || '';
+                    //     document.getElementById('phone').value = data.phone || '';
+                    //     
+                    //     // Update avatar if available
+                    //     if (data.avatar_url) {
+                    //         userAvatar.src = data.avatar_url;
+                    //     }
+                    //     
+                    //     // Update profile name
+                    //     profileName.textContent = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 
+                    //         profileEmail.textContent.split('@')[0];
+                    // }
+
+                    console.log('Loading user profile for ID:', userId);
+                } catch (error) {
+                    console.error('Error loading user profile:', error);
+                }
+            }
+
+            // Sign out button event listener
+            signOutButton.addEventListener('click', async function (e) {
+                e.preventDefault();
+
+                try {
+                    const { error } = await supabaseClient.auth.signOut();
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    // Redirect to login page after signout
+                    window.location.href = 'login.html';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                    alert('Error signing out. Please try again.');
+                }
+            });
+
+            // Update the sidebar logout button to use Supabase signout
+            if (sidebarLogoutBtn) {
+                sidebarLogoutBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+
+                    // Only perform signout if user is authenticated
+                    if (this.getAttribute('data-auth') === 'true') {
+                        try {
+                            const { error } = await supabaseClient.auth.signOut();
+
+                            if (error) {
+                                throw error;
+                            }
+
+                            // Redirect to login page after signout
+                            window.location.href = 'login.html';
+                        } catch (error) {
+                            console.error('Error signing out:', error);
+                            alert('Error signing out. Please try again.');
+                        }
+                    } else {
+                        // If not authenticated, just redirect to login
+                        window.location.href = 'login.html';
+                    }
+                });
+            }
+
+            // Settings menu active state
+            const settingsLinks = document.querySelectorAll('.list-group-item');
+            settingsLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    settingsLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Form submit handlers
+            profileForm?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                saveProfileChanges();
+            });
+
+            passwordForm?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                changePassword();
+            });
+
+            notificationsForm?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                saveNotificationSettings();
+            });
+
+            appearanceForm?.addEventListener('submit', function (e) {
+                e.preventDefault();
+                saveAppearanceSettings();
+            });
+
+            // Save all settings
+            saveAllButton?.addEventListener('click', function () {
+                saveProfileChanges();
+                saveNotificationSettings();
+                saveAppearanceSettings();
+            });
+
+            // Avatar upload handler
+            avatarUpload?.addEventListener('change', function (e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        userAvatar.src = e.target.result;
+                        // Here you would upload the file to Supabase storage
+                    }
+
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+
+            // Functions to save different settings
+            async function saveProfileChanges() {
+                try {
+                    const firstName = document.getElementById('first-name').value;
+                    const lastName = document.getElementById('last-name').value;
+                    const jobTitle = document.getElementById('job-title').value;
+                    const phone = document.getElementById('phone').value;
+
+                    // Update profile name display
+                    profileName.textContent = `${firstName} ${lastName}`.trim() ||
+                        profileEmail.textContent.split('@')[0];
+
+                    // Here you would update the user's profile in Supabase
+                    // const { data, error } = await supabaseClient
+                    //     .from('profiles')
+                    //     .upsert({
+                    //         id: (await supabaseClient.auth.getUser()).data.user.id,
+                    //         first_name: firstName,
+                    //         last_name: lastName,
+                    //         job_title: jobTitle,
+                    //         phone: phone,
+                    //         updated_at: new Date()
+                    //     });
+
+                    // if (error) throw error;
+
+                    alert('Profile updated successfully!');
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                    alert('Error updating profile. Please try again.');
+                }
+            }
+
+            async function changePassword() {
+                try {
+                    const currentPassword = document.getElementById('current-password').value;
+                    const newPassword = document.getElementById('new-password').value;
+                    const confirmPassword = document.getElementById('confirm-password').value;
+
+                    if (!currentPassword || !newPassword || !confirmPassword) {
+                        throw new Error('All password fields are required');
+                    }
+
+                    if (newPassword !== confirmPassword) {
+                        throw new Error('New passwords do not match');
+                    }
+
+                    // Password strength validation
+                    if (newPassword.length < 8) {
+                        throw new Error('Password must be at least 8 characters');
+                    }
+
+                    if (!/[A-Z]/.test(newPassword)) {
+                        throw new Error('Password must contain at least one uppercase letter');
+                    }
+
+                    if (!/[0-9]/.test(newPassword)) {
+                        throw new Error('Password must contain at least one number');
+                    }
+
+                    if (!/[^A-Za-z0-9]/.test(newPassword)) {
+                        throw new Error('Password must contain at least one special character');
+                    }
+
+                    // Here you would update the user's password in Supabase
+                    // const { error } = await supabaseClient.auth.updateUser({
+                    //     password: newPassword
+                    // });
+
+                    // if (error) throw error;
+
+                    // Clear password fields
+                    document.getElementById('current-password').value = '';
+                    document.getElementById('new-password').value = '';
+                    document.getElementById('confirm-password').value = '';
+
+                    alert('Password updated successfully!');
+                } catch (error) {
+                    console.error('Error updating password:', error);
+                    alert(error.message || 'Error updating password. Please try again.');
+                }
+            }
+
+            function saveNotificationSettings() {
+                try {
+                    // Here you would save the notification settings
+                    // For this example, just log the settings
+                    const settings = {
+                        email: {
+                            inventory: document.getElementById('notify-inventory').checked,
+                            shipments: document.getElementById('notify-shipments').checked,
+                            alerts: document.getElementById('notify-alerts').checked,
+                            reports: document.getElementById('notify-reports').checked
+                        },
+                        app: {
+                            inventory: document.getElementById('app-notify-inventory').checked,
+                            shipments: document.getElementById('app-notify-shipments').checked,
+                            alerts: document.getElementById('app-notify-alerts').checked
+                        }
+                    };
+
+                    console.log('Notification settings:', settings);
+                    alert('Notification settings saved!');
+                } catch (error) {
+                    console.error('Error saving notification settings:', error);
+                    alert('Error saving notification settings. Please try again.');
+                }
+            }
+
+            function saveAppearanceSettings() {
+                try {
+                    // Get theme selection
+                    const themeOptions = document.getElementsByName('theme');
+                    let selectedTheme;
+
+                    for (const option of themeOptions) {
+                        if (option.checked) {
+                            selectedTheme = option.value;
+                            break;
+                        }
+                    }
+
+                    // Get font size
+                    const fontSize = document.getElementById('font-size').value;
+
+                    // Save to localStorage
+                    localStorage.setItem('theme', selectedTheme);
+                    localStorage.setItem('fontSize', fontSize);
+
+                    // Apply theme immediately
+                    applyTheme(selectedTheme);
+
+                    console.log('Appearance settings:', { theme: selectedTheme, fontSize });
+                    alert('Appearance settings saved!');
+                } catch (error) {
+                    console.error('Error saving appearance settings:', error);
+                    alert('Error saving appearance settings. Please try again.');
+                }
+            }
+
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.classList.remove('dark-mode');
+                } else if (theme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                } else if (theme === 'system') {
+                    // Check system preference
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                    }
+                }
+            }
+
+            // Initialize settings page
+            function initSettingsPage() {
+                // Load saved theme
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                const themeRadio = document.getElementById(`theme-${savedTheme}`);
+                if (themeRadio) {
+                    themeRadio.checked = true;
+                }
+
+                // Load saved font size
+                const savedFontSize = localStorage.getItem('fontSize') || 'medium';
+                const fontSizeSelect = document.getElementById('font-size');
+                if (fontSizeSelect) {
+                    fontSizeSelect.value = savedFontSize;
+                }
+
+                // Apply current theme
+                applyTheme(savedTheme);
+            }
+
+            // Call initialization function
+            initSettingsPage();
+        });
+    </script>
+</body>
+
+</html>
