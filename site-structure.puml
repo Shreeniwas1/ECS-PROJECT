@@ -1,0 +1,95 @@
+@startuml Warehouse Management System - Site Structure
+
+' Style definitions
+skinparam componentStyle rectangle
+skinparam backgroundColor #FAFAFA
+skinparam ArrowColor #666666
+
+!define MAINrgb(8, 21, 29)
+!define AUTH #E74C3C
+!define FEATURE #27AE60
+!define SETTINGS #F39C12
+!define ADMIN #8E44AD
+
+' Components (Pages)
+[Login Page] as Login <<AUTH>>
+[Dashboard] as Dashboard <<MAIN>>
+[Inventory Management] as Inventory <<FEATURE>>
+[Staff Management] as Staff <<ADMIN>>
+[Settings] as Settings <<SETTINGS>>
+[Profile] as Profile <<SETTINGS>>
+
+' Authentication component
+component "Authentication" as Auth {
+  [Session Validation] as SessionValid
+  [User Authentication] as UserAuth
+}
+
+' Database connection
+database "Supabase DB" as DB {
+  [User Data]
+  [Inventory Data]
+  [Staff Data]
+  [Warehouse Data]
+}
+
+' Relations/Navigation
+Login --> UserAuth : login credentials
+UserAuth --> Dashboard : successful login
+SessionValid --> Login : invalid/expired session
+
+Dashboard --> Inventory : navigate
+Dashboard --> Staff : navigate
+Dashboard --> Settings : navigate
+
+' All authenticated pages require session validation
+SessionValid ..> Dashboard : validate
+SessionValid ..> Inventory : validate
+SessionValid ..> Staff : validate
+SessionValid ..> Settings : validate
+SessionValid ..> Profile : validate
+
+' Data connections
+[Inventory Data] ..> Inventory : provides data
+[Staff Data] ..> Staff : provides data
+[User Data] ..> Profile : provides data
+[User Data] ..> Settings : provides data
+[Warehouse Data] ..> Dashboard : provides data
+[Warehouse Data] ..> Inventory : provides data
+[Warehouse Data] ..> Staff : provides data
+
+note bottom of Dashboard
+  Central hub with:
+  - Temperature & humidity monitoring
+  - Warehouse status
+  - Performance metrics
+end note
+
+note bottom of Staff
+  Staff management features:
+  - Employee directory
+  - Schedule management
+  - Staff statistics
+end note
+
+note bottom of Inventory
+  Inventory features:
+  - Stock management
+  - Product database
+  - Location tracking
+end note
+
+note bottom of Settings
+  User settings:
+  - Profile information
+  - Password management
+  - Notification preferences
+  - UI appearance
+end note
+
+note right of Auth
+  Handles all authentication flows
+  using Supabase Auth
+end note
+
+@enduml

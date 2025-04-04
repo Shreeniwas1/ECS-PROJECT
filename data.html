@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intruder Detection System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .dashboard-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .status-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .status-indicator {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background-color: #4CAF50;
+            transition: background-color 0.5s;
+        }
+
+        .status-alert {
+            background-color: #f44336;
+        }
+
+        .reading-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .log {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 20px;
+            font-family: monospace;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .alert {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .card-title i {
+            margin-right: 10px;
+            color: #0d6efd;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #212529;
+                color: #f8f9fa;
+            }
+
+            .dashboard-card {
+                background-color: #343a40;
+                color: #f8f9fa;
+            }
+
+            .log {
+                background-color: #2b3035;
+                border-color: #495057;
+                color: #f8f9fa;
+            }
+
+            .log-entry {
+                border-color: #495057;
+            }
+
+            .card-title {
+                color: #f8f9fa;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="dashboard-card">
+            <h1 class="text-center mb-4">Intruder Detection System</h1>
+
+            <div class="status-container">
+                <div id="statusIndicator" class="status-indicator">
+                    SECURE
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <h5 class="card-title">
+                            <i class="fas fa-video"></i>
+                            Motion Status
+                        </h5>
+                        <div id="motionStatus" class="reading-value">No Motion</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <h5 class="card-title">
+                            <i class="fas fa-thermometer-half"></i>
+                            Temperature
+                        </h5>
+                        <div id="temperature" class="reading-value">--°C</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-card">
+                        <h5 class="card-title">
+                            <i class="fas fa-tint"></i>
+                            Humidity
+                        </h5>
+                        <div id="humidity" class="reading-value">--%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls text-center mt-4">
+                <button id="checkNow" class="btn btn-primary">
+                    <i class="fas fa-sync-alt me-2"></i> Check Now
+                </button>
+                <button id="toggleMonitoring" class="btn btn-success ms-2">
+                    <i class="fas fa-play me-2"></i> Start Monitoring
+                </button>
+            </div>
+
+            <div class="mt-4">
+                <h5 class="card-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    System Log
+                </h5>
+                <div class="log" id="logContainer">
+                    <div class="log-entry">System initialized. Waiting for data...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const statusIndicator = document.getElementById('statusIndicator');
+        const motionStatus = document.getElementById('motionStatus');
+        const temperatureElement = document.getElementById('temperature');
+        const humidityElement = document.getElementById('humidity');
+        const checkNowButton = document.getElementById('checkNow');
+        const toggleMonitoringButton = document.getElementById('toggleMonitoring');
+        const logContainer = document.getElementById('logContainer');
+
+        const API_URL = 'http://192.168.183.122:5000/detect';
+
+        let isMonitoring = false;
+        let monitoringInterval = null;
+
+        function addLogEntry(message, isAlert = false) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry' + (isAlert ? ' alert' : '');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.prepend(entry);
+
+            if (logContainer.children.length > 50) {
+                logContainer.removeChild(logContainer.lastChild);
+            }
+        }
+
+        async function checkMotion() {
+            addLogEntry('Checking for motion...');
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                updateStatusDisplay(data);
+            } catch (error) {
+                addLogEntry('Error fetching data: ' + error.message, true);
+                console.error('Error:', error);
+            }
+        }
+
+        function updateStatusDisplay(data) {
+            if (data.motion_detected) {
+                statusIndicator.classList.add('status-alert');
+                statusIndicator.textContent = 'ALERT!';
+                motionStatus.textContent = 'Motion Detected';
+                addLogEntry('Motion detected! Alert triggered.', true);
+            } else {
+                statusIndicator.classList.remove('status-alert');
+                statusIndicator.textContent = 'SECURE';
+                motionStatus.textContent = 'No Motion';
+                addLogEntry('No motion detected. Area secure.');
+            }
+
+            temperatureElement.textContent = `${data.temperature}°C`;
+            humidityElement.textContent = `${data.humidity}%`;
+        }
+
+        function toggleMonitoring() {
+            isMonitoring = !isMonitoring;
+
+            if (isMonitoring) {
+                toggleMonitoringButton.innerHTML = '<i class="fas fa-stop me-2"></i> Stop Monitoring';
+                toggleMonitoringButton.classList.remove('btn-success');
+                toggleMonitoringButton.classList.add('btn-danger');
+                addLogEntry('Continuous monitoring started');
+                checkMotion();
+                monitoringInterval = setInterval(checkMotion, 10000);
+            } else {
+                toggleMonitoringButton.innerHTML = '<i class="fas fa-play me-2"></i> Start Monitoring';
+                toggleMonitoringButton.classList.remove('btn-danger');
+                toggleMonitoringButton.classList.add('btn-success');
+                addLogEntry('Continuous monitoring stopped');
+                clearInterval(monitoringInterval);
+            }
+        }
+
+        checkNowButton.addEventListener('click', checkMotion);
+        toggleMonitoringButton.addEventListener('click', toggleMonitoring);
+
+        addLogEntry('System ready. Click "Check Now" or "Start Monitoring".');
+    </script>
+</body>
+
+</html>
